@@ -81,7 +81,7 @@ final class BatchDelete extends BaseBatch
      */
     public function process(Record $record, Database $database): bool
     {
-        // $database->delete($record->getID());
+        $database->delete($record->getID());
         ++$this->deleted;
 
         return true;
