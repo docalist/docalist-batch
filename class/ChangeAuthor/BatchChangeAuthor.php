@@ -172,7 +172,7 @@ final class BatchChangeAuthor extends BaseBatch
     public function process(Record $record, Database $database): bool
     {
         $record->createdBy->assign($this->createdBy);
-        //$database->save($record);
+        $database->save($record);
         ++$this->modified;
 
         return true;
