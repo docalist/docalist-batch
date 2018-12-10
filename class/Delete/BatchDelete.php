@@ -62,11 +62,6 @@ final class BatchDelete extends BaseBatch
      */
     public function beforeProcess(SearchResponse $searchResponse): bool
     {
-        // Laisse la classe parent faire ce qu'elle a à faire
-        if (! parent::beforeProcess($searchResponse)) {
-            return false;
-        }
-
         // Demande confirmation à l'utilisateur
         if (! $this->hasParameter('confirm')) {
             $this->view('docalist-batch:Delete/confirm', ['count' => $searchResponse->getHitsCount()]);
@@ -98,6 +93,5 @@ final class BatchDelete extends BaseBatch
     public function afterProcess(): void
     {
         $this->view('docalist-batch:Delete/after-process', ['count' => $this->deleted]);
-        parent::afterProcess();
     }
 }

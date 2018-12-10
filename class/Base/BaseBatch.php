@@ -168,11 +168,27 @@ abstract class BaseBatch implements Batch
             return;
         }
 
+        // Affiche un message quand docalist-search flushe son cache
+        $reportFlush = function (int $count, int $size): void {
+            printf('<p>Flush du cache docalist-search, %d notices</p>', $count);
+        };
+        add_action('docalist_search_before_flush', $reportFlush, 10, 2);
+
         // Lance le traitement par lot
         $this->processRecords($searchRequest);
 
-        // Finalise le traitement par lot
+        // Flush le cache docalist-search si besoin
+        $indexManager = docalist('docalist-search-index-manager'); /** @var IndexManager $indexManager */
+        $indexManager->flush();
+
+        // Supprime l'action ajoutée précédemment
+        remove_action('docalist_search_before_flush', $reportFlush, 10);
+
+        // Permet aux classes descendantes d'afficher un message final
         $this->afterProcess();
+
+        // Génère un bouton "back to search"
+        $this->view('docalist-batch:Base/after-process');
     }
 
     /**
@@ -268,10 +284,6 @@ abstract class BaseBatch implements Batch
      */
     public function beforeProcess(SearchResponse $searchResponse): bool
     {
-        add_action('docalist_search_before_flush', function (int $count, int $size): void {
-            printf('<p>Flush du cache docalist-search, %d notices</p>', $count);
-        }, 10, 2);
-
         return true;
     }
 
@@ -288,10 +300,6 @@ abstract class BaseBatch implements Batch
      */
     public function afterProcess(): void
     {
-        $indexManager = docalist('docalist-search-index-manager'); /** @var IndexManager $indexManager */
-        $indexManager->flush();
-
-        $this->view('docalist-batch:Base/after-process');
     }
 
     public function processRecords(SearchRequest $searchRequest): void
