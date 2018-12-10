@@ -21,7 +21,7 @@ use Docalist\Data\Record;
  *
  * @author Daniel Ménard <daniel.menard@laposte.net>
  */
-interface Batch extends Tool, BatchParameters
+interface Batch extends Tool, BatchParameters, BatchUtil
 {
     /**
      * Crée une requête de recherche à partir des paramètres fournis.
