@@ -76,7 +76,9 @@ interface BatchUtil
     /**
      * Génère un input hidden "silent=1".
      *
+     * @param string $name Nom du champ généré.
+     *
      * @return string
      */
-    public function silentInput();
+    public function silentInput($name = 'silent');
 }

@@ -72,8 +72,8 @@ trait BatchUtilTrait // implements BatchUtil
     /**
      * {@inheritDoc}
      */
-    public function silentInput()
+    public function silentInput($name = 'silent')
     {
-        return '<input type="hidden" name="silent" value="1" />';
+        return sprintf('<input type="hidden" name="%s" value="1" />', $name);
     }
 }
