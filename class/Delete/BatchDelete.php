@@ -23,7 +23,7 @@ use Docalist\Data\Database;
 final class BatchDelete extends BaseBatch
 {
     /**
-     * Nombre de notices supprimées
+     * Nombre de notices supprimées.
      *
      * @var int
      */
@@ -68,7 +68,7 @@ final class BatchDelete extends BaseBatch
         }
 
         // Demande confirmation à l'utilisateur
-        if (!isset($args['confirm'])) {
+        if (empty($args['confirm'])) {
             $this->view(
                 'docalist-batch:Delete/confirm',
                 ['args' => $args, 'count' => $searchResponse->getHitsCount()]
@@ -76,10 +76,12 @@ final class BatchDelete extends BaseBatch
             return false;
         }
 
-
         // Lance le traitement
-        printf('<p>Suppression de <b>%d notice(s)</b>...</p>', $searchResponse->getHitsCount());
         $this->deleted = 0;
+        $this->view(
+            'docalist-batch:Delete/before-process',
+            ['args' => $args, 'count' => $searchResponse->getHitsCount()]
+        );
 
         // Ok
         return true;
@@ -101,7 +103,7 @@ final class BatchDelete extends BaseBatch
      */
     public function afterProcess(array $args): void
     {
-        $this->view('docalist-batch:Delete/results', ['count' => $this->deleted]);
+        $this->view('docalist-batch:Delete/after-process', ['count' => $this->deleted]);
         parent::afterProcess($args);
     }
 }
