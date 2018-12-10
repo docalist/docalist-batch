@@ -17,7 +17,7 @@ use Docalist\Batch\Batch;
  * Affiche le résultat du traitement.
  *
  * @var Batch $this Le traitement par lot en cours d'exécution.
- * @var int $count
+ * @var int $count  Le nombre de notices modifiées.
  */
 ?>
 <p>
