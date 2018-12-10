@@ -11,12 +11,15 @@
  */
 namespace Docalist\Batch\Delete;
 
+use Docalist\Batch\Batch;
+
 /**
  * Affiche le résultat du traitement.
  *
+ * @var Batch $this Le traitement par lot en cours d'exécution.
  * @var int $count
  */
 ?>
 <p>
-    Terminé, <b><?= $count ?> notice(s)</b> ont été supprimée(s).
+    <b><?= sprintf(__('Terminé, %d notice(s) supprimée(s).', 'docalist-batch'), $count) ?></b>
 </p>

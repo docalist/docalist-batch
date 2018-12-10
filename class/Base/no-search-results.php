@@ -11,20 +11,18 @@
  */
 namespace Docalist\Batch\Base;
 
+use Docalist\Batch\Batch;
+
 /**
  * Vue affichée lorsque la requête initiale ne donne aucun résultat.
  *
  * @var Batch $this Le traitement par lot en cours d'exécution.
- * @var array $args Les paramètres fournis par l'utilisateur.
  */
-$args;
 ?>
 <p>
-    <?= _('La requête ne donne aucune réponse, impossible de continuer.', 'docalist-batch') ?>
+    <b><?= __('La recherche indiquée ne donne aucune réponse, impossible de continuer.', 'docalist-batch') ?></b>
 </p>
 
 <p>
-    <a href="<?= esc_attr($args['search-url']) ?>" class="button button-primary button-large">
-        <?= _('« Retour à la page de recherche', 'docalist-batch') ?>
-    </a>
+    <?= $this->backToSearchButton($this::PRIMARY_BUTTON) ?>
 </p>

@@ -11,16 +11,14 @@
  */
 namespace Docalist\Batch\Base;
 
+use Docalist\Batch\Batch;
+
 /**
  * Vue affichée lorsque le traitement est terminé.
  *
  * @var Batch $this Le traitement par lot en cours d'exécution.
- * @var array $args Les paramètres fournis par l'utilisateur.
  */
-$args;
 ?>
 <p>
-    <a href="<?= esc_attr($args['search-url']) ?>" class="button button-primary button-large">
-        <?= _('« Retour à la page de recherche', 'docalist-batch') ?>
-    </a>
+    <?= $this->backToSearchButton($this::PRIMARY_BUTTON) ?>
 </p>

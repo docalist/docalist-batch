@@ -11,19 +11,18 @@
  */
 namespace Docalist\Batch\Base;
 
+use Docalist\Batch\Batch;
+
 /**
  * Vue affichée lorsqu'aucune url de recherche n'a été fournie en paramètre.
  *
  * @var Batch $this Le traitement par lot en cours d'exécution.
- * @var array $args Les paramètres fournis par l'utilisateur.
  */
 ?>
 <p>
-    <?= _('Aucune recherche indiquée dans les paramètres, impossible de continuer.', 'docalist-batch') ?>
+    <b><?= __('Aucune recherche indiquée dans les paramètres, impossible de continuer.', 'docalist-batch') ?></b>
 </p>
 
 <p>
-    <a href="<?= esc_attr('javascript:history.go(-1)')?>" class="button">
-        <?= __('Annuler', 'docalist-batch') ?>
-    </a>
+    <?= $this->backButton($this::PRIMARY_BUTTON) ?>
 </p>

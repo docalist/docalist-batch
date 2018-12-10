@@ -11,31 +11,24 @@
  */
 namespace Docalist\Batch\Delete;
 
+use Docalist\Batch\Batch;
+
 /**
  * Demande confirmation à l'utilisateur.
  *
- * @var array   $args   Les paramètres fournis par l'utilisateur.
- * @var int     $count
+ * @var Batch   $this   Le traitement par lot en cours d'exécution.
+ * @var int     $count  Nombre de notices qui vont être traitées.
  */
-$args;
 ?>
 <form method="post" action="">
-    <p><?php
-        printf(
-            __('Attention, vous allez <strong>supprimer définitivement %d notice(s)</strong>.', 'docalist-batch'),
-            $count
-        ) ?>
+    <p>
+        <b><?= sprintf(__('Vous allez supprimer définitivement %d notice(s).', 'docalist-batch'), $count) ?></b>
     </p>
 
     <p>
-        <a href="<?= esc_attr($args['search-url']) ?>" class="button">
-            <?= _('« Retour à la page de recherche', 'docalist-batch') ?>
-        </a>
-
-        <button name="confirm" value="1" class="button button-primary button-large button-link-delete">
-            <?= __('Confirmer la suppression', 'docalist-batch') ?>
-        </button>
+        <?= $this->backToSearchButton() ?>
+        <?= $this->confirmButton('', __('Lancer la suppression...', 'docalist-batch')) ?>
     </p>
 
-    <input type="hidden" name="silent" value="1" />
+    <?= $this->silentInput() ?>
 </form>
