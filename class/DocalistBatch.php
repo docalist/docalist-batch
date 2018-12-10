@@ -100,9 +100,9 @@ final class DocalistBatch
 //             'batch-change-status' => function () use ($databases) {
 //                 return new BatchChangeStatus($databases);
 //             },
-//             'batch-change-author' => function () use ($databases) {
-//                 return new BatchChangeAuthor($databases);
-//             },
+            'batch-change-author' => function () use ($databases) {
+                return new BatchChangeAuthor($databases);
+            },
 //             'batch-search-replace' => function () use ($databases) {
 //                 return new BatchSearchReplace($databases);
 //             },
