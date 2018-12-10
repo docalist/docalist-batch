@@ -10,6 +10,7 @@
 namespace Docalist\Batch;
 
 use Docalist\Tools\Tool;
+use Docalist\Batch\BatchParameters;
 use Docalist\Search\SearchRequest;
 use Docalist\Search\SearchResponse;
 use Docalist\Data\Database;
@@ -20,20 +21,18 @@ use Docalist\Data\Record;
  *
  * @author Daniel Ménard <daniel.menard@laposte.net>
  */
-interface Batch extends Tool
+interface Batch extends Tool, BatchParameters
 {
     /**
-     * Crée une requête de recherche à partir des paramètres fournis par l'utilisateur.
+     * Crée une requête de recherche à partir des paramètres fournis.
      *
      * Cette méthode crée une requête à partir des paramètres fournis et ajoute éventuellement des filtres et
      * des agrégations supplémentaires (la classe BaseBatch par exemple, ajoute une agrégation de type TermsIn).
      *
-     * @param array $args Les paramètres fournis par l'utilisateur.
-     *
      * @return SearchRequest|null La requête de recherche générée ou null si les paramètres fournis ne permettent
      * pas de créer une requête.
      */
-    public function createSearchRequest(array $args): ?SearchRequest;
+    public function createSearchRequest(): ?SearchRequest;
 
     /**
      * Valide la requête sur laquelle portera le traitement par lot.
@@ -60,12 +59,11 @@ interface Batch extends Tool
      *
      * Si elle retourne false, l'exécution s'arrête, si elle retourne true, la traitement par lot est lancé.
      *
-     * @param array             $args               Les paramètres fournis par l'utilisateur.
-     * @param SearchResponse    $searchResponse     La réponse contenenant les notices à traiter.
+     * @param SearchResponse $searchResponse La réponse contenenant les notices à traiter.
      *
      * @return bool
      */
-    public function beforeProcess(array $args, SearchResponse $searchResponse): bool;
+    public function beforeProcess(SearchResponse $searchResponse): bool;
 
     /**
      * Exécute le traitement sur l'enregistrement docalist passé en paramètre.
@@ -83,9 +81,7 @@ interface Batch extends Tool
      * Cette méthode est appellée une fois que le traitement par lot est terminé. Elle peut afficher
      * un message de synthèse, fermer les ressources utilisées, etc.
      *
-     * @param array $args Les paramètres fournis par l'utilisateur.
-     *
      * @return bool
      */
-    public function afterProcess(array $args): void;
+    public function afterProcess(): void;
 }
