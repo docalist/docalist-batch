@@ -1,0 +1,5 @@
+/tests export-ignore
+/.* export-ignore
+/phpcs.xml export-ignore
+/phpmd.xml export-ignore
+/phpunit.xml export-ignore
