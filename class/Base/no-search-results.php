@@ -16,11 +16,18 @@ use Docalist\Batch\Batch;
 /**
  * Vue affichée lorsque la requête initiale ne donne aucun résultat.
  *
- * @var Batch $this Le traitement par lot en cours d'exécution.
+ * @var Batch $this     Le traitement par lot en cours d'exécution.
+ * @var bool  $modified False s'il s'agit de la requête initiale, true s'il s'agit de la requête modifiée.
  */
 ?>
 <p>
-    <b><?= __('La recherche indiquée ne donne aucune réponse, impossible de continuer.', 'docalist-batch') ?></b>
+    <b>
+        <?=
+            empty($modified)
+            ? __('La recherche indiquée ne donne aucune réponse, impossible de continuer.', 'docalist-batch')
+            : __('Il n\'y a plus de notices Docalist à traiter, impossible de continuer.', 'docalist-batch')
+        ?>
+    </b>
 </p>
 
 <p>

@@ -158,7 +158,7 @@ abstract class BaseBatch implements Batch
 
         // Vérifie que la requête modifiée donne des réponses
         if (0 === $searchResponse->getHitsCount()) {
-            $this->view('docalist-batch:Base/no-search-results');
+            $this->view('docalist-batch:Base/no-search-results', ['modified' => true]);
 
             return;
         }
