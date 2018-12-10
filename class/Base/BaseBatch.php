@@ -25,6 +25,7 @@ use InvalidArgumentException;
 use Docalist\Search\Indexer;
 use Docalist\Batch\BatchParameters;
 use Docalist\Batch\Base\BatchParametersTrait;
+use Docalist\Batch\Base\BatchUtilTrait;
 
 /**
  * Classe de base pour les traitements par lot.
@@ -33,7 +34,7 @@ use Docalist\Batch\Base\BatchParametersTrait;
  */
 abstract class BaseBatch implements Batch
 {
-    use BatchParametersTrait;
+    use BatchParametersTrait, BatchUtilTrait;
 
     /**
      * Liste des bases docalist sur lesquelles on peut lancer le traitement par lot.
@@ -135,15 +136,10 @@ abstract class BaseBatch implements Batch
         };
 
         // Vérifie que la requête initiale donne des réponses
-        if (0 === $initialCount = $searchResponse->getHitsCount()) {
+        if (0 === $searchResponse->getHitsCount()) {
             $this->view('docalist-batch:Base/no-search-results');
 
             return;
-        }
-
-        // Affiche le nombre initial de réponses si le mode "silent" n'est pas activé
-        if (!$this->hasParameter('silent')) {
-            printf('<p>Vous avez sélectionné <b>%d enregistrement(s)</b> :</p>', $initialCount);
         }
 
         // Valide les résultats obtenus et ajoute des paramètres de la requête
@@ -221,7 +217,7 @@ abstract class BaseBatch implements Batch
             $postType = $this->collectionToPostType($collection);
             if (empty($postType) || ! $this->isDatabase($postType)) {
                 $messages[] = sprintf(
-                    'ajout d\'un filtre pour éliminer les <b>%d réponse(s)</b> de type <b>%s</b>',
+                    __('<b>%d réponse(s)</b> de type <b>« %s »</b>', 'docalist-batch'),
                     $count,
                     $in->getBucketLabel($bucket)
                 );
@@ -231,11 +227,19 @@ abstract class BaseBatch implements Batch
         }
 
         if ($messages && !$this->hasParameter('silent')) {
+            printf(
+                __(
+                    '<p>Votre recherche initiale retournait <b>%d réponse(s)</b>,
+                    des filtres ont été ajoutés pour éliminer :</p>',
+                    'docalist-batch'
+                ),
+                $searchResponse->getHitsCount()
+            );
             echo '<ul class="ul-square"><li>', implode(',</li><li>', $messages), '.</li></ul>';
         }
 
         if (empty($types)) {
-            echo "<p>Il n'y a plus de notices docalist dans les résultats, impossible de continuer.</p>";
+            echo "<p><b>Il n'y a plus de notices docalist dans les résultats, impossible de continuer.</b></p>";
 
             return false;
         }
