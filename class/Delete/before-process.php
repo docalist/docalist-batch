@@ -17,9 +17,9 @@ use Docalist\Batch\Batch;
  * Message affichée lorsque le traitement commence.
  *
  * @var Batch   $this   Le traitement par lot en cours d'exécution.
- * @var int     $count
+ * @var int     $count  Le nombre de notices à modifier.
  */
 ?>
 <p>
-    <b><?= sprintf(__('Suppression de  %d notice(s).', 'docalist-batch'), $count) ?></b>
+    <b><?= sprintf(__('Suppression de  %d notice(s)...', 'docalist-batch'), $count) ?></b>
 </p>
