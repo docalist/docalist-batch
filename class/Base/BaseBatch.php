@@ -23,6 +23,8 @@ use Docalist\Data\Record;
 use Generator;
 use InvalidArgumentException;
 use Docalist\Search\Indexer;
+use Docalist\Batch\BatchParameters;
+use Docalist\Batch\Base\BatchParametersTrait;
 
 /**
  * Classe de base pour les traitements par lot.
@@ -31,6 +33,8 @@ use Docalist\Search\Indexer;
  */
 abstract class BaseBatch implements Batch
 {
+    use BatchParametersTrait;
+
     /**
      * Liste des bases docalist sur lesquelles on peut lancer le traitement par lot.
      *
@@ -110,63 +114,61 @@ abstract class BaseBatch implements Batch
      */
     final public function run(array $args = []): void
     {
+        // Stocke les paramètres
+        $this->setParameters($args);
+
+        // Affiche la description de l'outil
         echo '<p class="description">', $this->getDescription(), '</p>';
 
         // Crée la requête initiale
-        if (is_null($searchRequest = $this->createSearchRequest($args))) {
-            $this->view('docalist-batch:Base/no-search-request', ['this' => $this, 'args' => $args]);
+        if (is_null($searchRequest = $this->createSearchRequest())) {
+            $this->view('docalist-batch:Base/no-search-request');
 
             return;
         }
 
         // Exécute la requête initiale
         if (is_null($searchResponse = $searchRequest->execute())) {
-            $this->view('docalist-batch:Base/search-request-error', ['this' => $this, 'args' => $args]);
+            $this->view('docalist-batch:Base/search-request-error');
 
             return;
         };
 
         // Vérifie que la requête initiale donne des réponses
         if (0 === $initialCount = $searchResponse->getHitsCount()) {
-            $this->view('docalist-batch:Base/no-search-results', ['this' => $this, 'args' => $args]);
+            $this->view('docalist-batch:Base/no-search-results');
 
             return;
         }
 
-        // Valide les résultats obtenus et ajoute des paramètres de la requête
-        ob_start();
-        $validate = $this->validateRequest($searchRequest, $searchResponse);
-        $output = ob_get_clean();
-
-        // Si validateRequest a généré des messages, on affiche d'abord le nombre initial de réponses
-        if (! empty($output) && !isset($args['silent'])) {
-            printf('<p>Votre recherche retourne <b>%d réponse(s)</b> :</p>', $initialCount);
-            echo $output;
+        // Affiche le nombre initial de réponses si le mode "silent" n'est pas activé
+        if (!$this->hasParameter('silent')) {
+            printf('<p>Vous avez sélectionné <b>%d enregistrement(s)</b> :</p>', $initialCount);
         }
 
-        // Si validateRequest() a retourné false, terminé
-        if (! $validate) {
-            $this->view('docalist-batch:Base/validate-failed', ['this' => $this, 'args' => $args]);
+        // Valide les résultats obtenus et ajoute des paramètres de la requête
+        if (! $this->validateRequest($searchRequest, $searchResponse)) {
+            $this->view('docalist-batch:Base/validate-failed');
 
             return;
         }
 
         // Exécute la requête modifiée
         if (is_null($searchResponse = $searchRequest->execute())) {
-            $this->view('docalist-batch:Base/search-request-error', ['this' => $this, 'args' => $args]);
+            $this->view('docalist-batch:Base/search-request-error');
 
             return;
         };
 
         // Vérifie que la requête modifiée donne des réponses
         if (0 === $searchResponse->getHitsCount()) {
-            $this->view('docalist-batch:Base/no-search-results', ['this' => $this, 'args' => $args]);
+            $this->view('docalist-batch:Base/no-search-results');
 
             return;
         }
 
         // Prépare l'exécution du traitement par lot
-        if (! $this->beforeProcess($args, $searchResponse)) {
+        if (! $this->beforeProcess($searchResponse)) {
             return;
         }
 
@@ -174,21 +176,21 @@ abstract class BaseBatch implements Batch
         $this->processRecords($searchRequest);
 
         // Finalise le traitement par lot
-        $this->afterProcess($args);
+        $this->afterProcess();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function createSearchRequest(array $args): ?SearchRequest
+    public function createSearchRequest(): ?SearchRequest
     {
         // Récupère l'url de recherche passée en paramètre et crée la searchUrl correspondante
-        if (empty($args['search-url'])) {
+        if (! $this->hasParameter('search-url')) {
             return null;
         }
 
         // Crée une SearchUrl
-        $searchUrl = new SearchUrl($args['search-url']);
+        $searchUrl = new SearchUrl($this->getParameter('search-url'));
 
         // Crée une requête de recherche à partir de cette url
         $searchRequest = $searchUrl->getSearchRequest();
@@ -228,7 +230,7 @@ abstract class BaseBatch implements Batch
             $types[] = $postType;
         }
 
-        if ($messages) {
+        if ($messages && !$this->hasParameter('silent')) {
             echo '<ul class="ul-square"><li>', implode(',</li><li>', $messages), '.</li></ul>';
         }
 
@@ -260,7 +262,7 @@ abstract class BaseBatch implements Batch
     /**
      * {@inheritDoc}
      */
-    public function beforeProcess(array $args, SearchResponse $searchResponse): bool
+    public function beforeProcess(SearchResponse $searchResponse): bool
     {
         add_action('docalist_search_before_flush', function (int $count, int $size): void {
             printf('<p>Flush du cache docalist-search, %d notices</p>', $count);
@@ -280,12 +282,12 @@ abstract class BaseBatch implements Batch
     /**
      * {@inheritDoc}
      */
-    public function afterProcess(array $args): void
+    public function afterProcess(): void
     {
         $indexManager = docalist('docalist-search-index-manager'); /** @var IndexManager $indexManager */
         $indexManager->flush();
 
-        $this->view('docalist-batch:Base/after-process', ['this' => $this, 'args' => $args]);
+        $this->view('docalist-batch:Base/after-process');
     }
 
     public function processRecords(SearchRequest $searchRequest): void
@@ -340,7 +342,7 @@ abstract class BaseBatch implements Batch
     protected function view(string $view, array $data = []): void
     {
         $views = docalist('views'); /** @var Views $views */
-
+        $data['this'] = $this;
         $views->display($view, $data);
     }
 }
