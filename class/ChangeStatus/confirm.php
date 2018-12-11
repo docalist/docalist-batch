@@ -12,8 +12,6 @@
 namespace Docalist\Batch\ChangeStatus;
 
 use Docalist\Batch\Batch;
-use Docalist\Data\Field\PostAuthorField;
-use Docalist\Forms\Container;
 
 /**
  * Demande confirmation à l'utilisateur.
