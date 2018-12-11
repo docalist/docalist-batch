@@ -162,24 +162,28 @@ abstract class BaseBatch implements Batch
         }
 
         // Valide les résultats obtenus et ajoute des paramètres de la requête
+        $initialRequest = clone $searchRequest;
         if (! $this->validateRequest($searchRequest, $searchResponse)) {
             $this->view('docalist-batch:Base/validate-failed');
 
             return;
         }
 
-        // Exécute la requête modifiée
-        if (is_null($searchResponse = $searchRequest->execute())) {
-            $this->view('docalist-batch:Base/search-request-error');
+        // Teste s'il faut ré-exécuter la requête
+        if ($searchRequest != $initialRequest) { // != pas !== car on compare des objets
+            // Exécute la requête modifiée
+            if (is_null($searchResponse = $searchRequest->execute())) {
+                $this->view('docalist-batch:Base/search-request-error');
 
-            return;
-        };
+                return;
+            };
 
-        // Vérifie que la requête modifiée donne des réponses
-        if (0 === $searchResponse->getHitsCount()) {
-            $this->view('docalist-batch:Base/no-search-results', ['modified' => true]);
+            // Vérifie que la requête modifiée donne des réponses
+            if (0 === $searchResponse->getHitsCount()) {
+                $this->view('docalist-batch:Base/no-search-results', ['modified' => true]);
 
-            return;
+                return;
+            }
         }
 
         // Prépare l'exécution du traitement par lot
