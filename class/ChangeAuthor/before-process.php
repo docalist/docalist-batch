@@ -14,7 +14,7 @@ namespace Docalist\Batch\ChangeAuthor;
 use Docalist\Batch\Batch;
 
 /**
- * Message affichée lorsque le traitement commence.
+ * Message affiché lorsque le traitement commence.
  *
  * @var Batch   $this   Le traitement par lot en cours d'exécution.
  * @var int     $count  Le nombre de notices à modifier.
