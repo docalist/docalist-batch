@@ -76,7 +76,7 @@ final class BatchChangeStatus extends BaseBatch
             return null;
         }
 
-        // Si l'utilisateur a déjà choisi le nouveau compte, ajoute une agrégation de type "TermsCreatedBy"
+        // Si l'utilisateur a déjà choisi le nouveau statut, ajoute une agrégation de type "Filter"
         if ($this->hasParameter('status')) {
             $statusCount = new FilterAggregation($this->getFilter($this->getParameter('status')));
             $statusCount->setName('status-count');
