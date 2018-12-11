@@ -87,11 +87,25 @@ final class BatchChangeStatus extends BaseBatch
         return $searchRequest;
     }
 
+    /**
+     * Retourne un filtre elasticsearch permettant de n'inclure que les réponses ayant le statut indiqué.
+     *
+     * @param string $status Statut à filtrer.
+     *
+     * @return array La définition DSL du filtre elasticsearch.
+     */
     private function getFilter(string $status): array
     {
         return $this->getQueryDsl()->term('status', $status);
     }
 
+    /**
+     * Retourne un filtre elasticsearch permettant d'exclure les notices ayant le statut indiqué.
+     *
+     * @param string $status Statut à filtrer.
+     *
+     * @return array La définition DSL du filtre elasticsearch.
+     */
     private function getExcludeFilter(string $status): array
     {
         $dsl = $this->getQueryDsl();
