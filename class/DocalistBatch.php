@@ -19,6 +19,8 @@ use Docalist\Batch\SearchReplace\BatchSearchReplace;
 use Docalist\Batch\ChangeStatus\BatchChangeStatus;
 use Docalist\Batch\ChangeAuthor\BatchChangeAuthor;
 use Docalist\Batch\MoveToDatabase\BatchMoveToDatabase;
+use Docalist\Search\QueryDSL;
+use Docalist\Data\Database;
 
 /**
  * Plugin docalist-batch.
@@ -37,9 +39,11 @@ final class DocalistBatch
     /**
      * Initialise le plugin.
      *
-     * @param DocalistData $docalistData Le plugin docalist-data à utiliser.
+     * @param DocalistData  $docalistData   Le plugin docalist-data à utiliser.
+     * @param SearchEngine  $searchEngine   SearchEngine à utiliser.
+     * @param QueryDSL      $queryDsl       QueryDSL Elasticsearch.
      */
-    public function initialize(DocalistData $docalistData, SearchEngine $searchEngine): void
+    public function initialize(DocalistData $docalistData, SearchEngine $searchEngine, QueryDSL $queryDsl): void
     {
         /*
          * On initialise le widget en deux temps car l'action widgets_init est générée *avant* l'action init.
@@ -59,7 +63,7 @@ final class DocalistBatch
 
         add_action(
             'init',
-            function () use ($docalistData, $searchEngine) {
+            function () use ($docalistData, $searchEngine, $queryDsl) {
                 // Charge les fichiers de traduction du plugin
                 load_plugin_textdomain('docalist-batch', false, 'docalist-batch/languages');
 
@@ -69,7 +73,7 @@ final class DocalistBatch
                 });
 
                 // Récupère la liste des traitements disponibles
-                $batches = $this->getBatches($docalistData->databases());
+                $batches = $this->getBatches($docalistData->databases(), $queryDsl);
 
                 // Initialize les dépendances du widget
                 $this->widget->initialize(new ToolsList($batches), $searchEngine);
@@ -85,10 +89,13 @@ final class DocalistBatch
 
     /**
      * Retourne la liste des traitements par lots disponibles.
-
+     *
+     * @param array     $databases  La liste des bases (postType => Database).
+     * @param QueryDSL  $queryDsl   Query DSL Elasticsearch.
+     *
      * @return array Un array de la forme 'batch-name' => factory.
      */
-    private function getBatches(array $databases): array
+    private function getBatches(array $databases, QueryDSL $queryDsl): array
     {
         // Si on n'a aucune base docalist, aucun traitement par lot n'est possible
         if (empty($databases)) {
@@ -97,20 +104,20 @@ final class DocalistBatch
 
         // Initialise et retourne la liste
         return [
-//             'batch-change-status' => function () use ($databases) {
-//                 return new BatchChangeStatus($databases);
+//             'batch-change-status' => function () use ($databases, $queryDsl) {
+//                 return new BatchChangeStatus($databases, $queryDsl);
 //             },
-            'batch-change-author' => function () use ($databases) {
-                return new BatchChangeAuthor($databases);
+            'batch-change-author' => function () use ($databases, $queryDsl) {
+                return new BatchChangeAuthor($databases, $queryDsl);
             },
-//             'batch-search-replace' => function () use ($databases) {
-//                 return new BatchSearchReplace($databases);
+//             'batch-search-replace' => function () use ($databases, $queryDsl) {
+//                 return new BatchSearchReplace($databases, $queryDsl);
 //             },
-//             'batch-move-to-database' => function () use ($databases) {
-//                 return new BatchMoveToDatabase($databases);
+//             'batch-move-to-database' => function () use ($databases, $queryDsl) {
+//                 return new BatchMoveToDatabase($databases, $queryDsl);
 //             },
-            'batch-delete' => function () use ($databases) {
-                return new BatchDelete($databases);
+            'batch-delete' => function () use ($databases, $queryDsl) {
+                return new BatchDelete($databases, $queryDsl);
             },
         ];
     }
