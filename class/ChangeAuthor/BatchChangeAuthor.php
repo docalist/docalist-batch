@@ -16,8 +16,7 @@ use Docalist\Search\SearchResponse;
 use Docalist\Data\Database;
 use Docalist\Data\Field\PostAuthorField;
 use Docalist\Forms\Container;
-use Docalist\Search\Aggregation\Standard\TermsCreatedBy;
-use Docalist\Search\QueryDSL;
+use Docalist\Search\Aggregation\Bucket\FilterAggregation;
 
 /**
  * Change l'auteur WordPress des notices.
@@ -77,15 +76,43 @@ final class BatchChangeAuthor extends BaseBatch
             return null;
         }
 
-        // Si l'utilisateur a déjà choisi le nouveau compte, ajoute une agrégation de type "TermsCreatedBy"
+        // Si l'utilisateur a déjà choisi le nouveau compte, ajoute une agrégation de type "Filter"
         if ($this->hasParameter('createdBy')) {
-            $authors = new TermsCreatedBy([], ['multiselect' => false]);
-            $authors->setName('authors');
-            $searchRequest->addAggregation($authors);
+            $user = get_user_by('ID', $this->getParameter('createdBy'));
+            $login = $user->user_login;
+
+            $userCount = new FilterAggregation($this->getFilter($login));
+            $userCount->setName('user-count');
+            $searchRequest->addAggregation($userCount);
         }
 
         // Ok
         return $searchRequest;
+    }
+
+    /**
+     * Retourne un filtre elasticsearch permettant de n'inclure que les réponses ayant l'auteur indiqué.
+     *
+     * @param string $createdBy Login utilisateur.
+     *
+     * @return array La définition DSL du filtre elasticsearch.
+     */
+    private function getFilter(string $createdBy): array
+    {
+        return $this->getQueryDsl()->term('createdby', $createdBy);
+    }
+
+    /**
+     * Retourne un filtre elasticsearch permettant d'exclure les notices ayant l'auteur indiqué.
+     *
+     * @param string $createdBy Login utilisateur.
+     *
+     * @return array La définition DSL du filtre elasticsearch.
+     */
+    private function getExcludeFilter(string $createdBy): array
+    {
+        $dsl = $this->getQueryDsl();
+        return $dsl->bool([$dsl->mustNot($dsl->term('createdby', $createdBy))]);
     }
 
     /**
@@ -100,30 +127,24 @@ final class BatchChangeAuthor extends BaseBatch
 
         // Si l'utilisateur a déjà choisi le nouveau compte, ajoute un filtre sur createdBy
         if ($this->hasParameter('createdBy')) {
-            $user = get_user_by('ID', $this->getParameter('createdBy'));
-            $login = $user->user_login;
-            $authors = $searchResponse->getAggregation('authors'); /** @var TermsCreatedBy $authors */
-            foreach ($authors->getBuckets() as $bucket) {
-                $author = $bucket->key;
-                if ($author !== $login) {
-                    continue;
-                }
-                $count = $bucket->doc_count;
-                $dsl = docalist('elasticsearch-query-dsl'); /** @var QueryDSL $dsl */
-                $filter = $dsl->bool([$dsl->mustNot($dsl->term('createdby', $login))]);
-                $searchRequest->addFilter($filter);
+            $userCount = $searchResponse->getAggregation('user-count'); /** @var FilterAggregation $statusCount */
+            $count = $userCount->getResult('doc_count');
+            if ($count) {
+                $createdBy = $this->getParameter('createdBy');
+                $user = get_user_by('ID', $createdBy);
+                $login = $user->user_login;
+                $searchRequest->addFilter($this->getExcludeFilter($login));
 
                 if (!$this->hasParameter('silent2')) {
                     printf(
                         __(
-                            '<p>Un filtre a été ajouté pour éliminer %d notice(s) déjà attribuée(s) à %s.</p>',
+                            '<p>Un filtre a été ajouté pour éliminer %d notice(s) déjà attribuées à %s.</p>',
                             'docalist-batch'
                         ),
                         $count,
                         $user->display_name
                     );
                 }
-                break;
             }
         }
 
