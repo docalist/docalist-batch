@@ -26,6 +26,7 @@ use Docalist\Search\Indexer;
 use Docalist\Batch\BatchParameters;
 use Docalist\Batch\Base\BatchParametersTrait;
 use Docalist\Batch\Base\BatchUtilTrait;
+use Docalist\Search\QueryDSL;
 
 /**
  * Classe de base pour les traitements par lot.
@@ -44,14 +45,22 @@ abstract class BaseBatch implements Batch
     private $databases;
 
     /**
+     * Le QueryDSL à utiliser pour créer des filtres dans les requêtes.
+     *
+     * @var QueryDSL
+     */
+    private $queryDsl;
+
+    /**
      * Constructeur.
      *
      * @param Database[] $databases Liste des bases docalist sur lesquelles on peut lancer le traitement par lot,
      *                              sous la forme d'un tableau de la forme "post-type" => Database.
      */
-    public function __construct(array $databases)
+    public function __construct(array $databases, QueryDSL $queryDsl)
     {
         $this->databases = $databases;
+        $this->queryDsl = $queryDsl;
     }
 
     /**
@@ -64,6 +73,16 @@ abstract class BaseBatch implements Batch
     private function isDatabase(string $postType): bool
     {
         return isset($this->databases[$postType]);
+    }
+
+    /**
+     * Retourne le QueryDSL à utiliser pour créer des filtres dans les requêtes.
+     *
+     * @return QueryDSL
+     */
+    protected function getQueryDsl(): QueryDSL
+    {
+        return $this->queryDsl;
     }
 
     /**
