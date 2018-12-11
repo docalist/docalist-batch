@@ -25,7 +25,12 @@ use Docalist\Forms\Container;
 ?>
 <form method="post" action="">
     <p>
-        <b><?= __('Choisissez le compte WordPress à utiliser comme auteur :', 'docalist-batch') ?></b>
+        <b><?php
+            printf(
+                __('Vous allez changer l\'auteur WordPress de %d notice(s).', 'docalist-batch'),
+                $count
+            ) ?>
+        </b>
     </p>
 
     <?= $form ?>
