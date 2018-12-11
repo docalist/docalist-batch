@@ -104,9 +104,9 @@ final class DocalistBatch
 
         // Initialise et retourne la liste
         return [
-//             'batch-change-status' => function () use ($databases, $queryDsl) {
-//                 return new BatchChangeStatus($databases, $queryDsl);
-//             },
+            'batch-change-status' => function () use ($databases, $queryDsl) {
+                return new BatchChangeStatus($databases, $queryDsl);
+            },
             'batch-change-author' => function () use ($databases, $queryDsl) {
                 return new BatchChangeAuthor($databases, $queryDsl);
             },
