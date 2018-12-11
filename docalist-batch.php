@@ -21,6 +21,7 @@
 namespace Docalist\Batch;
 
 use Docalist\Data\Plugin as DocalistData;
+use Docalist\Search\QueryDSL;
 
 /**
  * Version du plugin.
@@ -77,6 +78,7 @@ add_action('plugins_loaded', function () {
     // Initialise le plugin
     $docalistData = docalist('docalist-data'); /** @var DocalistData $docalistData */
     $searchEngine = docalist('docalist-search-engine'); /** @var SearchEngine $searchEngine */
+    $queryDsl = docalist('elasticsearch-query-dsl'); /** @var QueryDSL $queryDsl */
     $plugin = new DocalistBatch();
-    $plugin->initialize($docalistData, $searchEngine);
+    $plugin->initialize($docalistData, $searchEngine, $queryDsl);
 }, 11); // Priorité 11 : on attend que docalist-data soit chargé car on en a besoin
