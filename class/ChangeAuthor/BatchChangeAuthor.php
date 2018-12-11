@@ -200,7 +200,7 @@ final class BatchChangeAuthor extends BaseBatch
         $item->setLabel(__('Nouvel auteur :', 'docalist-batch'));
         $item->setDescription(
             __(
-                'Choisissez le compte WordPress auquel seront attribuées les enregistrements.',
+                'Choisissez le compte WordPress dans la liste.',
                 'docalist-batch'
             )
         );
