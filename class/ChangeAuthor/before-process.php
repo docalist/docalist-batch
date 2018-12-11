@@ -21,5 +21,5 @@ use Docalist\Batch\Batch;
  */
 ?>
 <p>
-    <b><?= sprintf(__('Modification de de  %d notice(s)...', 'docalist-batch'), $count) ?></b>
+    <b><?= sprintf(__('Modification de %d notice(s)...', 'docalist-batch'), $count) ?></b>
 </p>
