@@ -188,7 +188,7 @@ final class BatchChangeStatus extends BaseBatch
     public function process(Record $record, Database $database): bool
     {
         $record->status->assign($this->status);
-        // $database->save($record);
+        $database->save($record);
         ++$this->modified;
 
         return true;
