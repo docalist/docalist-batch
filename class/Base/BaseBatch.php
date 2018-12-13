@@ -54,7 +54,7 @@ abstract class BaseBatch implements Batch
     /**
      * Constructeur.
      *
-     * @param Database[] $databases Liste des bases docalist sur lesquelles on peut lancer le traitement par lot,
+     * @param Database[] $databases Liste des bases Docalist sur lesquelles on peut lancer le traitement par lot,
      *                              sous la forme d'un tableau de la forme "post-type" => Database.
      */
     public function __construct(array $databases, QueryDSL $queryDsl)
@@ -64,15 +64,37 @@ abstract class BaseBatch implements Batch
     }
 
     /**
+     * Retourne la liste des bases Docalist.
+     *
+     * @return array Un tableau de la forme "post-type" => Database.
+     */
+    protected function getDatabases(): array
+    {
+        return $this->databases;
+    }
+
+    /**
      * Teste si le type de post passé en paramètre correspond à une base Docalist.
      *
      * @param string $postType
      *
      * @return bool
      */
-    private function isDatabase(string $postType): bool
+    protected function isDatabase(string $postType): bool
     {
         return isset($this->databases[$postType]);
+    }
+
+    /**
+     * Retourne la base Docalist qui correspond au post-type passé en paramètre.
+     *
+     * @param string $postType
+     *
+     * @return Database|null Retourne null si le post-type indiqué n'est pas dans la liste des bases Docalist.
+     */
+    protected function getDatabase(string $postType): ?Database
+    {
+        return $this->databases[$postType] ?? null;
     }
 
     /**
@@ -83,18 +105,6 @@ abstract class BaseBatch implements Batch
     protected function getQueryDsl(): QueryDSL
     {
         return $this->queryDsl;
-    }
-
-    /**
-     * Retourne la base Docalist qui contient le Record passé en paramètre.
-     *
-     * @param Record $record
-     *
-     * @return Database|null Retourne null si le post-type du record n'est pas dans la liste des bases Docalist.
-     */
-    private function getDatabase(Record $record): ?Database
-    {
-        return $this->databases[$record->posttype->getPhpValue()] ?? null;
     }
 
     /**
@@ -352,7 +362,7 @@ abstract class BaseBatch implements Batch
                 printf('%d notices traitées...<br />', $count);
             }
 
-            $database = $this->getDatabase($record);
+            $database = $this->getDatabase($record->posttype->getPhpValue());
             if (is_null($database)) {
                 printf('Warning : Post %s is not a docalist record, ignore<br />', $record->getID());
                 continue;
