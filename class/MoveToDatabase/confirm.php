@@ -32,6 +32,17 @@ use Docalist\Forms\Container;
         ) ?>
     </p>
 
+    <p>
+        <?= _e('Quand une notice est transférée dans une autre base :', 'docalist-batch') ?>
+    </p>
+    <ul class="ul-square">
+        <li><?= __('elle conserve son statut (publiée, en attente, etc.),', 'docalist-batch') ?></li>
+        <li><?= __('elle obtient un nouveau numéro de référence (champ ref),', 'docalist-batch') ?></li>
+        <li><?= __('elle obtient un nouveau permalien (slug),', 'docalist-batch') ?></li>
+        <li><?= __('sa date de dernière modification est mise à jour (modifiée par : vous),', 'docalist-batch') ?></li>
+        <li><?= __('la page de l\'ancienne notice n\'existe plus (erreur "404 non trouvé"),', 'docalist-batch') ?></li>
+        <li><?= __('on ne teste pas si l\'auteur a des droits dans la base de destination.', 'docalist-batch') ?></li>
+    </ul>
     <div style="display: none">
         <?= $form ?>
     </div>
