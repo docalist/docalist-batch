@@ -113,9 +113,9 @@ final class DocalistBatch
 //             'batch-search-replace' => function () use ($databases, $queryDsl) {
 //                 return new BatchSearchReplace($databases, $queryDsl);
 //             },
-//             'batch-move-to-database' => function () use ($databases, $queryDsl) {
-//                 return new BatchMoveToDatabase($databases, $queryDsl);
-//             },
+            'batch-move-to-database' => function () use ($databases, $queryDsl) {
+                return new BatchMoveToDatabase($databases, $queryDsl);
+            },
             'batch-delete' => function () use ($databases, $queryDsl) {
                 return new BatchDelete($databases, $queryDsl);
             },
