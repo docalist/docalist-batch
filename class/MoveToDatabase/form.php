@@ -12,8 +12,6 @@
 namespace Docalist\Batch\MoveToDatabase;
 
 use Docalist\Batch\Batch;
-use Docalist\Data\Field\PostAuthorField;
-use Docalist\Forms\Container;
 
 /**
  * Formulaire de saisie des paramètres.
