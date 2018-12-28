@@ -16,13 +16,6 @@ use Docalist\Search\SearchResponse;
 use Docalist\Search\Aggregation\Bucket\TermsAggregation;
 use Docalist\Data\Database;
 use Docalist\Forms\Container;
-use Docalist\Schema\Schema;
-use Docalist\Forms\Table;
-use Docalist\Type\ListEntry;
-use Docalist\Type\Composite;
-use Docalist\Type\Scalar;
-use Docalist\Type\Text;
-use Docalist\Type\DateTime;
 use Docalist\Search\Aggregation\Standard\TermsIn;
 
 /**
