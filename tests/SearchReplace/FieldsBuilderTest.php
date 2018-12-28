@@ -15,11 +15,6 @@ use Docalist\Batch\Tests\SearchReplace\TestRecord;
 use Docalist\Batch\SearchReplace\Field;
 use Docalist\Batch\SearchReplace\Fields;
 
-// use Docalist\Batch\SearchReplace\Field;
-// use Docalist\Batch\SearchReplace\Fields;
-// use InvalidArgumentException;
-// use Docalist\Search\Aggregation\Bucket\TermsAggregation;
-
 /**
  * Teste la classe Field.
  *
@@ -27,16 +22,51 @@ use Docalist\Batch\SearchReplace\Fields;
  */
 class FieldsBuilderTest extends PHPUnit_Framework_TestCase
 {
-    public function testUn()
+    /**
+     * Teste la méthode addFieldsFromSchema.
+     */
+    public function testAddFieldsFromSchema(): void
     {
         $record = new TestRecord();
         $schema = $record->getSchema();
 
         $builder = new FieldsBuilder();
         $builder->addFieldsFromSchema($schema);
-// echo '<pre>';
-// var_export($builder->getField('object'));
-// echo '</pre>';
+
+        $this->checkBuilder($builder);
+    }
+
+    /**
+     * Teste la méthode addFieldsFromRecord.
+     */
+    public function testAddFieldsFromRecord(): void
+    {
+        $builder = new FieldsBuilder();
+        $builder->addFieldsFromRecord(new TestRecord());
+
+        $this->checkBuilder($builder);
+    }
+
+    /**
+     * Vérifie que les champs déjà présents dans le builder ne sont pas ajoutés en double.
+     */
+    public function testDuplicateFields(): void
+    {
+        $builder = new FieldsBuilder();
+        $builder->addFieldsFromRecord(new TestRecord());
+        $fields = $builder->getFields();
+
+        $builder->addFieldsFromRecord(new TestRecord());
+        $this->assertSame($fields, $builder->getFields());
+    }
+
+    /**
+     * Vérifie que le Builder passé en paramètre contient les bons champs.
+     *
+     * @param FieldsBuilder $builder    Le FieldsBuilder à vérifier.
+     */
+    private function checkBuilder(FieldsBuilder $builder): void
+    {
         $this->check($builder, 'text', Field::TYPE_TEXT);
         $this->check($builder, 'texts', Field::TYPE_TEXT, true);
         $this->check($builder, 'value', Field::TYPE_VALUE);
@@ -57,7 +87,15 @@ class FieldsBuilderTest extends PHPUnit_Framework_TestCase
         $this->check($objects, 'values', Field::TYPE_VALUE, true);
     }
 
-    private function check(Fields $fields, string $name, int $type, bool $repeat = false)
+    /**
+     * Vérifie que la liste de champs contient le champ indiqué et qu'il a les bons paramètres.
+     *
+     * @param Fields    $fields
+     * @param string    $name
+     * @param int       $type
+     * @param bool      $repeat
+     */
+    private function check(Fields $fields, string $name, int $type, bool $repeat = false): void
     {
         $this->assertTrue($fields->hasField($name));
         $field = $fields->getField($name);
