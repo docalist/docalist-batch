@@ -10,12 +10,12 @@
 namespace Docalist\Batch\SearchReplace;
 
 use Docalist\Batch\Base\BaseBatch;
+use Docalist\Data\Database;
 use Docalist\Data\Record;
+use Docalist\Forms\Container;
 use Docalist\Search\SearchRequest;
 use Docalist\Search\SearchResponse;
 use Docalist\Search\Aggregation\Bucket\TermsAggregation;
-use Docalist\Data\Database;
-use Docalist\Forms\Container;
 use Docalist\Search\Aggregation\Standard\TermsIn;
 
 /**
