@@ -110,9 +110,9 @@ final class DocalistBatch
             'batch-change-author' => function () use ($databases, $queryDsl) {
                 return new BatchChangeAuthor($databases, $queryDsl);
             },
-//             'batch-search-replace' => function () use ($databases, $queryDsl) {
-//                 return new BatchSearchReplace($databases, $queryDsl);
-//             },
+            'batch-search-replace' => function () use ($databases, $queryDsl) {
+                return new BatchSearchReplace($databases, $queryDsl);
+            },
             'batch-move-to-database' => function () use ($databases, $queryDsl) {
                 return new BatchMoveToDatabase($databases, $queryDsl);
             },
