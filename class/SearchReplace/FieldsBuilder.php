@@ -11,6 +11,7 @@ namespace Docalist\Batch\SearchReplace;
 
 use Docalist\Batch\SearchReplace\Fields;
 use Docalist\Batch\SearchReplace\Field;
+use Docalist\Batch\SearchReplace\TypedField;
 use Docalist\Schema\Schema;
 use Docalist\Data\Record;
 use Docalist\Type\Composite;
@@ -112,6 +113,18 @@ final class FieldsBuilder extends Fields
         }
 
         return Field::TYPE_VALUE;
+    }
+
+    public function addTypedFields(string $field, array $types): void
+    {
+        $parent = $this->getField($field);
+        $value = $parent->getField('value');
+        $fieldType = $value->getType();
+        $repeat = $value->isRepeatable();
+        foreach ($types as $type) {
+            $field = new TypedField($type, $fieldType, $repeat);
+            $parent->addField($field);
+        }
     }
 
     /**
