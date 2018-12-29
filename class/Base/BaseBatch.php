@@ -300,7 +300,7 @@ abstract class BaseBatch implements Batch
         return true;
     }
 
-    private function collectionToPostType(string $collection): string
+    protected function collectionToPostType(string $collection): string
     {
         $indexManager = docalist('docalist-search-index-manager'); /** @var IndexManager $indexManager */
         $collections = $indexManager->getCollections();
