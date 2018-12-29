@@ -23,6 +23,9 @@ use Docalist\Forms\Container;
  */
 ?>
 <style>
+    select {
+        width: 100%;
+    }
     optgroup {
         font-weight: lighter;
     }
