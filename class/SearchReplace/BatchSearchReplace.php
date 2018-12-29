@@ -300,6 +300,7 @@ final class BatchSearchReplace extends BaseBatch
 
         // Enregistre le record s'il a été modifié
         if ($save) {
+            $record->filterEmpty(false);
             $database->save($record);
             ++$this->modified;
         }
@@ -350,12 +351,46 @@ final class BatchSearchReplace extends BaseBatch
     private function getFieldsBuilder(TermsAggregation $types): FieldsBuilder
     {
         $builder = new FieldsBuilder();
+        $typed = ['topic', 'number', 'date', 'content', 'extent', 'relation'];
+        $tables = [];
         foreach ($types->getBuckets() as $bucket) {
             $type = $bucket->key;
             $class = Database::getClassForType($type);
             $record = new $class(); /** @var Record $record */
             $builder->addFieldsFromRecord($record);
+
+            foreach ($bucket->collections->buckets as $bucket) {
+                $collection = $bucket->key;
+                $postType = $this->collectionToPostType($collection);
+                $database = $this->getDatabase($postType);
+                if (is_null($database)) {
+                    echo "base $postType non trouvée<br />";
+                    continue;
+                }
+                $record = $database->createReference($type);
+                $schema = $record->getSchema();
+                foreach ($typed as $field) {
+                    if (!$schema->hasField($field)) {
+                        continue;
+                    }
+                    $table = $schema->getField($field)->getField('type')->table();
+                    list(, $table) = explode(':', $table);
+                    $tables[$field][$table] = $table;
+                }
+            }
         }
+
+        foreach ($tables as $field => $fieldTables) {
+            $types = [];
+            foreach ($fieldTables as $table) {
+                $table = docalist('table-manager')->get($table); /** @var TableInterface $table */
+                foreach ($table->search('code') as $code) {
+                    $types[$code] = $code;
+                }
+            }
+            $builder->addTypedFields($field, $types);
+        }
+
         return $builder;
     }
 
@@ -370,23 +405,30 @@ final class BatchSearchReplace extends BaseBatch
 
         $operations = $form->table('operations')
             ->setRepeatable(true)
+            ->setAttribute('required')
             ->setLabel(__('Liste des opérations', 'docalist-batch'));
 
         $operations
             ->select('field')
             ->setOptions($fieldsBuilder->getFieldsAsSelectOptions())
+            ->setFirstOption(__('Choisissez un champ', 'docalist-batch'))
+            ->setAttribute('required')
             ->setLabel(__('Champ', 'docalist-batch'))
             ->setDescription(__('Champ sur lequel porte l\'opération', 'docalist-batch'));
 
         $operations
             ->input('search')
             ->setLabel(__('Rechercher', 'docalist-batch'))
-            ->setDescription('Texte ou valeur recherchée');
+            // ->setDescription('Texte ou valeur recherchée')
+            ->setAttribute('placeholder', 'Texte ou valeur à supprimer')
+            ->addClass('large-text');
 
         $operations
             ->input('replace')
             ->setLabel(__('Remplacer par', 'docalist-batch'))
-            ->setDescription(__('Texte ou valeur de à injecter', 'docalist-batch'));
+            // ->setDescription(__('Texte ou valeur à injecter', 'docalist-batch'))
+            ->setAttribute('placeholder', __('Texte ou valeur à injecter', 'docalist-batch'))
+            ->addClass('large-text');
 
         $form->bind($this->getParameters());
 
