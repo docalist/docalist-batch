@@ -20,7 +20,7 @@ use Docalist\Type\Collection;
  *
  * @author Daniel Ménard <daniel.menard@laposte.net>
  */
-final class Field extends Fields
+class Field extends Fields
 {
     /**
      * Le type d'un champ composite.
@@ -459,7 +459,7 @@ final class Field extends Fields
      * - "function (Composite): bool" : si le champ a un parent,
      * - "function (Collection): bool" : si le parent est répétable,
      */
-    private function parent(callable $operation): callable
+    protected function parent(callable $operation): callable
     {
         if (! $this->hasParent()) {
             return $operation;
