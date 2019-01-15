@@ -9,7 +9,7 @@
  *
  * @author Daniel Ménard <daniel.menard@laposte.net>
  */
-namespace Docalist\Batch\BatchSearchReplace;
+namespace Docalist\Batch\SearchReplace;
 
 use Docalist\Batch\Batch;
 
