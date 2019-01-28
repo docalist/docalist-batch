@@ -105,8 +105,8 @@ class FieldsBuilderTest extends PHPUnit_Framework_TestCase
 
         if ($fields instanceof FieldsBuilder) {
             return;
-
         }
+
         $this->assertTrue($field->hasParent());
         $this->assertSame($fields, $field->getParent());
         $this->assertTrue($fields->hasField($name));
