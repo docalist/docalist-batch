@@ -9,11 +9,18 @@
  */
 namespace Docalist\Batch\SearchReplace;
 
-use Docalist\Type\Scalar;
+use Docalist\Batch\SearchReplace\Fields;
+use Docalist\Batch\SearchReplace\Operation;
+use Docalist\Batch\SearchReplace\Operation\ValueOperation;
+use Docalist\Batch\SearchReplace\Operation\TextOperation\ClearText;
+use Docalist\Batch\SearchReplace\Operation\TextOperation\InjectText;
+use Docalist\Batch\SearchReplace\Operation\TextOperation\RemoveText;
+use Docalist\Batch\SearchReplace\Operation\TextOperation\ReplaceText;
+use Docalist\Batch\SearchReplace\Operation\ValueOperation\ClearValue;
+use Docalist\Batch\SearchReplace\Operation\ValueOperation\InjectValue;
+use Docalist\Batch\SearchReplace\Operation\ValueOperation\ReplaceValue;
+use Docalist\Batch\SearchReplace\Operation\ValueOperation\RemoveValue;
 use InvalidArgumentException;
-use Docalist\Data\Record;
-use Docalist\Type\Composite;
-use Docalist\Type\Collection;
 
 /**
  * Un champ sur lequel on peut lancer un chercher/remplacer.
@@ -243,276 +250,31 @@ class Field extends Fields
 
 
     /**
-     * Retourne un callable qui permet de faire une opération de chercher/remplacer sur le champ.
+     * Retourne une opération qui permet de faire une chercher/remplacer sur le champ.
      *
      * @param string $search    Texte ou valeur recherchée.
      * @param string $replace   Texte ou valeur de remplacement.
      *
-     * @return callable Un callable de la forme : function (Record): bool :
-     *
-     * - Le callable retourné prend en paramètre l'enregistrement docalist à modifier.
-     * - Il effectue l'opération de chercher/remplacer sur le champ en cours.
-     * - Il retourne true si le champ a été modifié, faux sinon.
+     * @return Operation
      */
-    public function getOperation(string $search, string $replace): callable
+    public function getOperation(string $search, string $replace): Operation
     {
-        if ($this->isObject()) {
-            throw new InvalidArgumentException("Search/replace on an object is not allowed");
+        if ($this->isText()) {
+            if ($search === '') {
+                return ($replace === '') ? new ClearText($this) : new InjectText($this, $replace);
+            }
+
+            return ($replace === '') ? new RemoveText($this, $search) : new ReplaceText($this, $search, $replace);
         }
 
-        // Search est renseigné
-        if ($search !== '') {
-            // Replace est renseigné -> Rechercher et remplacer des occurences
-            if ($replace !== '') {
-                return $this->modify($search, $replace);
+        if ($this->isValue()) {
+            if ($search === '') {
+                return ($replace === '') ? new ClearValue($this) : new InjectValue($this, $replace);
             }
 
-            // Replace est vide -> Supprimer des occurences
-            return $this->modify($search, '');
+            return ($replace === '') ? new RemoveValue($this, $search) : new ReplaceValue($this, $search, $replace);
         }
 
-        // Search est vide
-
-        // Replace est renseigné -> Injecter du contenu
-        if ($replace !== '') {
-            return $this->inject($replace);
-        }
-
-        // Replace est vide -> Vider le champ
-        return $this->clear();
-    }
-
-
-    /**
-     * Retourne un callable qui change le texte ou la valeur indiquée.
-     *
-     * @param string $search    Texte ou valeur recherché.
-     * @param string $replace   Texte ou valeur de remplacement.
-     *
-     * @return callable Un callable de la forme "function (Record): bool".
-     */
-    protected function modify(string $search, string $replace): callable
-    {
-        $operation = $this->isText() ? $this->modifyText($search, $replace) : $this->modifyValue($search, $replace);
-
-        return $this->record($this->parent($this->repeatable($operation)));
-    }
-
-    /**
-     * Retourne un callable qui modifie le contenu d'un champ scalaire de type "texte".
-     *
-     * @param string $search    Texte recherché.
-     * @param string $replace   Texte de remplacement.
-     *
-     * @return callable Un callable de la forme "function (Scalar): bool".
-     */
-    private function modifyText(string $search, string $replace): callable
-    {
-        return function (Scalar $scalar) use ($search, $replace): bool {
-            $count = 0;
-            $value = str_replace($search, $replace, $scalar->getPhpValue(), $count);
-            if ($count === 0) {
-                return false;
-            }
-
-            $scalar->assign($value);
-
-            return true;
-        };
-    }
-
-    /**
-     * Retourne un callable qui modifie le contenu d'un champ scalaire de type "value".
-     *
-     * @param string $search    Valeur recherchée.
-     * @param string $replace   Valeur de remplacement.
-     *
-     * @return callable Un callable de la forme "function (Scalar): bool".
-     */
-    private function modifyValue(string $search, string $replace): callable
-    {
-        return function (Scalar $scalar) use ($search, $replace): bool {
-            if ($scalar->getPhpValue() !== $search) {
-                return false;
-            }
-
-            $scalar->assign($replace);
-
-            return true;
-        };
-    }
-
-    /**
-     * Retourne un callable qui injecte le texte ou la valeur indiquée dans le champ.
-     *
-     * @param string $inject Le texte ou la valeur à injecter.
-     *
-     * @return callable Un callable de la forme : function (Record): bool.
-     */
-    protected function inject(string $inject): callable
-    {
-        $operation = $this->isRepeatable() ? $this->injectRepeatable($inject) : $this->injectNotRepeatable($inject);
-
-        return $this->record($this->parent($operation));
-    }
-
-    /**
-     * Retourne un callable qui injecte le texte ou la valeur indiquée dans un champ non répétable.
-     *
-     * Le callback généré teste si le champ contient déjà la valeur à injecter. Si c'est le cas, elle ne fait rien
-     * et retourn false, sinon elle assigne la valeur au champ et retourne true.
-     *
-     * @param string $inject Le texte ou la valeur à injecter.
-     *
-     * @return callable Un callable de la forme "function (Scalar): bool".
-     */
-    private function injectNotRepeatable(string $inject): callable
-    {
-        return function (Scalar $scalar) use ($inject): bool {
-            if ($scalar->getPhpValue() === $inject) {
-                return false;
-            }
-
-            $scalar->assign($inject);
-
-            return true;
-        };
-    }
-
-    /**
-     * Retourne un callable qui injecte le texte ou la valeur indiquée dans un champ répétable.
-     *
-     * Le callable généré teste si la valeur à injecter figure déjà dans la liste des valeurs du champs.
-     * Si c'est le cas, elle ne fait rien et retourne false, sinon, elle ajoute la nouvelle valeur à la fin
-     * de la collection et retourne true.
-     *
-     * @param string $inject Le texte ou la valeur à injecter.
-     *
-     * @return callable Un callable de la forme "function (Collection): bool".
-     */
-    private function injectRepeatable(string $inject): callable
-    {
-        return function (Collection $collection) use ($inject): bool {
-            foreach ($collection as $occurence) {
-                if ($occurence->getPhpValue() === $inject) {
-                    return false;
-                }
-            }
-
-            $collection[] = $inject;
-
-            return true;
-        };
-    }
-
-    /**
-     * Retourne un callable qui efface le contenu du champ.
-     *
-     * @return callable Un callable de la forme "function (Record): bool".
-     */
-    protected function clear(): callable
-    {
-        $operation = function (Scalar $scalar): bool {
-            $default = $scalar->getClassDefault();
-
-            if ($scalar->getPhpValue() === $default) {
-                return false;
-            }
-
-            $scalar->assign($default);
-
-            return true;
-        };
-
-        return $this->record($this->parent($this->repeatable($operation)));
-    }
-
-    /**
-     * Retourne un callable qui applique l'opération indiquée sur un Record.
-     *
-     * @param callable  $operation  Un callable de la forme "function (Any): bool".
-     *
-     * @return callable Un callable de la forme "function (Record): bool".
-     */
-    private function record(callable $operation): callable
-    {
-        $field = $this->hasParent() ? $this->getParent()->getName() : $this->getName();
-
-        return function (Record $record) use ($field, $operation): bool {
-            return $operation($record->$field);
-        };
-    }
-
-    /**
-     * Retourne un callable qui applique l'opération indiquée en tenant compte du parent du champ en cours.
-     *
-     * Si le champ en cours n'a pas de parent, l'opération passée en paramètre est retournée inchangée.
-     *
-     * Sinon, l'opération est modifiée pour qu'elle s'applique au sous-champ en cours.
-     * Si le parent est répétable, l'opération sera appliquée à toutes les occurences du parent.
-     *
-     * @param callable  $operation  Un callable de la forme "function (Any): bool".
-     *
-     * @return callable Un callable de la forme :
-     *
-     * - "function (Any): bool" : le callable passé en paramètre si le champ n'a pas de parent.
-     * - "function (Composite): bool" : si le champ a un parent,
-     * - "function (Collection): bool" : si le parent est répétable,
-     */
-    protected function parent(callable $operation): callable
-    {
-        if (! $this->hasParent()) {
-            return $operation;
-        }
-
-        $subfield = $this->getName();
-        $operation = function (Composite $composite) use ($subfield, $operation): bool {
-            return $operation($composite->$subfield);
-        };
-
-        return $this->getParent()->isRepeatable() ? $this->collection($operation) : $operation;
-    }
-
-    /**
-     * Modifie le callable passé en paramètre si le champ en cours est répétable.
-     *
-     * Si le champ en cours n'est pas répétable, l'opération passée en paramètre est retournée inchangée.
-     *
-     * Si le champ est répétable, la méthode retourne un callable qui applique l'opération passée en paramètre à
-     * chaque élément de la collection. Le callable généré retourne true si l'opération a retourné true pour l'un
-     * des éléments.
-     *
-     * @param callable $operation Un callable de la forme "function (Any): bool".
-     *
-     * @return callable Un callable de la forme :
-     *
-     * - "function (Collection): bool" : si le champ est répétable,
-     * - "function (Any): bool" : le callable passé en paramètre sinon.
-     */
-    private function repeatable(callable $operation): callable
-    {
-        return $this->isRepeatable() ? $this->collection($operation) : $operation;
-    }
-
-    /**
-     * Modifie le callable passé en paramètre pour qu'il s'applique à tous les éléments d'une collection.
-     *
-     * Le callable généré retourne true si l'opération a retourné true pour l'un des éléments.
-     *
-     * @param callable $operation Un callable de la forme "function (Any): bool".
-     *
-     * @return callable Un callable de la forme "function (Collection): bool".
-     */
-    private function collection(callable $operation): callable
-    {
-        return function (Collection $collection) use ($operation): bool {
-            $result = false;
-            foreach ($collection as $occurence) {
-                $changed = $operation($occurence);
-                $result = $result || $changed;
-            }
-
-            return $result;
-        };
+        throw new InvalidArgumentException('Search/replace is not allowed on this field');
     }
 }
