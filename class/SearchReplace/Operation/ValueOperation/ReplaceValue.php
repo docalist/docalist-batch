@@ -9,6 +9,7 @@
  */
 namespace Docalist\Batch\SearchReplace\Operation\ValueOperation;
 
+use Docalist\Batch\SearchReplace\Operation\ValueOperation\ReplaceTrait;
 use Docalist\Batch\SearchReplace\Operation\TextOperation\ReplaceText;
 use Docalist\Type\Scalar;
 use Docalist\Batch\SearchReplace\Field;
@@ -20,24 +21,10 @@ use Docalist\Batch\SearchReplace\Field;
  */
 class ReplaceValue extends ReplaceText
 {
+    use ReplaceTrait;
+
     /**
      * {@inheritDoc}
      */
     protected const FIELD_TYPE = Field::TYPE_VALUE;
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function replace(Scalar $field, string $search, string $replace)
-    {
-        // Si le champ ne contient pas la valeur exacte recherché, retourne false pour indiquer "non modifié"
-        if ($field->getPhpValue() !== $search) {
-            return false;
-        }
-
-        // Stocke la valeur de remplacement dans le champ et retourne true
-        $field->assign($replace);
-
-        return true;
-    }
 }
