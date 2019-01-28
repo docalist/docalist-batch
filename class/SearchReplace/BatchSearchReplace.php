@@ -10,6 +10,7 @@
 namespace Docalist\Batch\SearchReplace;
 
 use Docalist\Batch\Base\BaseBatch;
+use Docalist\Batch\SearchReplace\Operation;
 use Docalist\Data\Database;
 use Docalist\Data\Record;
 use Docalist\Forms\Container;
@@ -28,16 +29,9 @@ final class BatchSearchReplace extends BaseBatch
     /**
      * La liste des opérations à effectuer.
      *
-     * @var array
+     * @var Operation[]
      */
     private $operations;
-
-    /**
-     * La liste des callbacks à exécuter.
-     *
-     * @var callable[]
-     */
-    private $callbacks;
 
     /**
      * Nombre de notices modifiées.
@@ -45,33 +39,6 @@ final class BatchSearchReplace extends BaseBatch
      * @var int
      */
     private $modified;
-
-    public function ZZZsetParameters(array $parameters): void
-    {
-        if (! isset($parameters['operations'])) {
-            $operations = [];
-            $fields = [
-                'title',            // texte
-                'edition',          // textes
-                'posttype',         // value
-                'media',            // values
-                'context.title',    // single.subtext
-                'corporation.name', // repeat.subtext
-                'author.role',      // repeat.subvalue
-                'topic.value',      // repeat.subvalues
-            ];
-            foreach ($fields as $field) {
-                $operations[] = ['field' => $field, 'search' => 'se&amp;"arch', 'replace' => '<rep>'];
-                $operations[] = ['field' => $field, 'search' => 'to be removed', 'replace' => ''];
-                $operations[] = ['field' => $field, 'search' => '', 'replace' => 'inject'];
-                $operations[] = ['field' => $field, 'search' => '', 'replace' => ''];
-                $operations[] = ['field' => '', 'search' => '', 'replace' => ''];
-            }
-            $parameters['operations'] = $operations;
-        }
-
-        parent::setParameters($parameters);
-    }
 
     /**
      * {@inheritDoc}
@@ -181,8 +148,6 @@ final class BatchSearchReplace extends BaseBatch
     private function validateOperations(array $operations, FieldsBuilder $fieldsBuilder): bool
     {
         $this->operations = [];
-        $this->callbacks = [];
-
         foreach ($operations as $operation) {
             $name = $operation['field'];
             $search = $operation['search'];
@@ -202,86 +167,11 @@ final class BatchSearchReplace extends BaseBatch
                 $field = $field->getField($part);
             }
 
-            // Explique ce que va faire l'opération
-            $operation['explain'] = $this->explainOperation($field, $search, $replace);
-
-            // Stocke l'opération et le callback correspondant
-            $this->operations[] = $operation;
-            $this->callbacks[] = $field->getOperation($search, $replace);
+            // Stocke l'opération
+            $this->operations[] = $field->getOperation($search, $replace);
         }
 
         return !empty($this->operations);
-    }
-
-    /**
-     * Explique ce que va faire une opération.
-     *
-     * @param Field     $field
-     * @param string    $search
-     * @param string    $replace
-     *
-     * @return string
-     */
-    private function explainOperation(Field $field, string $search, string $replace)
-    {
-        // Détermine le message de base
-        if ($search !== '') {
-            if ($replace !== '') {
-                $explain = __('Remplacer {search} par {replace} dans {field}.', 'docalist-batch');
-            } else {
-                $explain = __('Supprimer {search} dans {field}.', 'docalist-batch');
-            }
-        } else {
-            if ($replace !== '') {
-                $explain = __('Injecter {replace} dans {field}.', 'docalist-batch');
-            } else {
-                $explain = __('Vider {field}.', 'docalist-batch');
-            }
-        }
-
-        // Nom du champ
-        if ($field->hasParent()) {
-            $name = sprintf(
-                $field->isRepeatable()
-                ? __('le sous-champ répétable %s', 'docalist-batch')
-                : __('le sous-champ %s', 'docalist-batch'),
-                sprintf('<var>%s</var>', $field->getName())
-            );
-
-            $parent = $field->getParent();
-            $name .= sprintf(
-                $parent->isRepeatable()
-                ? __(' du champ répétable %s', 'docalist-batch')
-                : __(' du champ %s', 'docalist-batch'),
-                sprintf('<var>%s</var>', $parent->getName())
-            );
-        } else {
-            $name = sprintf(
-                $field->isRepeatable()
-                ? __('le champ répétable %s', 'docalist-batch')
-                : __('le champ %s', 'docalist-batch'),
-                sprintf('<var>%s</var>', $field->getName())
-            );
-        }
-
-        // Texte ou valeur recherchée
-        $search = sprintf(
-            $field->isText()
-            ? __('la chaine %s', 'docalist-batch')
-            : __('la valeur « %s »', 'docalist-batch'),
-            sprintf('<del>%s</del>', htmlspecialchars($search))
-        );
-
-        // Texte ou valeur de remplacement
-        $replace = sprintf(
-            $field->isText()
-            ? __('la chaine %s', 'docalist-batch')
-            : __('la valeur « %s »', 'docalist-batch'),
-            sprintf('<ins>%s</ins>', htmlspecialchars($replace))
-        );
-
-        // Ok
-        return  strtr($explain, ['{field}' => $name, '{search}' => $search, '{replace}' => $replace]);
     }
 
     /**
@@ -293,8 +183,8 @@ final class BatchSearchReplace extends BaseBatch
         $save = false;
 
         // Exécute tous les traitements demandés
-        foreach ($this->callbacks as $callback) {
-            $changed = $callback($record);
+        foreach ($this->operations as $operation) {
+            $changed = $operation->process($record);
             $save = $save || $changed;
         }
 
@@ -317,30 +207,7 @@ final class BatchSearchReplace extends BaseBatch
         $this->view('docalist-batch:SearchReplace/after-process', ['count' => $this->modified]);
         parent::afterProcess();
     }
-/*
-    private function getFieldsByCollection(TermsIn $typesByCollection): array
-    {
-        $fields = [];
-        foreach ($typesByCollection->getBuckets() as $bucket) {
-            $collection = $bucket->key;
-            $postType = $this->collectionToPostType($collection);
-            echo "Collection = $collection, post-type=$postType<br />";
-            $database = $this->getDatabase($postType);
-            foreach ($bucket->types->buckets as $bucket) {
-                $type = $bucket->key;
-                echo "Récupère les champs du type $type<br />";
-                $record = $database->createReference($type);
-                $this->addFields($fields, $record->getSchema());
-            }
-        }
 
-//         echo '<pre>';
-//         var_export($fields);
-//         echo '</pre>';
-//         die();
-        return $fields;
-    }
-*/
     /**
      * Crée un FieldBuilder à partir de l'agrégation "types de notices" passée en paramètre.
      *
