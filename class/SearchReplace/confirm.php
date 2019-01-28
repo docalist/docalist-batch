@@ -20,7 +20,7 @@ use Docalist\Batch\SearchReplace\Operation;
  * @var Batch       $this       Le traitement par lot en cours d'exécution.
  * @var int         $count      Nombre de notices qui vont être traitées.
  * @var string      $form       Le formulaire de paramétrage à afficher.
- * @var array[]     $operations Liste des opérations à effectuer.
+ * @var Operation[] $operations Liste des opérations à effectuer.
  */
 ?>
 <style>
@@ -54,7 +54,7 @@ use Docalist\Batch\SearchReplace\Operation;
 
     <ol class="ul-square"><?php
     foreach ($operations as $operation) { ?>
-        <li><?= $operation['explain'] ?></li><?php
+        <li><?= $operation->getExplanation() ?></li><?php
     } ?>
     </ol>
 
