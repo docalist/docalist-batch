@@ -50,9 +50,32 @@ interface Operation
     public function process(Record $record): bool;
 
     /**
+     * Modifie l'explication de l'opération.
+     *
+     * @param string $explanation
+     */
+    public function setExplanation(string $explanation):void;
+
+    /**
      * Retourne une chaine qui explique ce que fait l'opération.
      *
      * @return string
      */
     public function getExplanation(): string;
+
+    /**
+     * Modifie la condition à appliquer au champ parent.
+     *
+     * Utilisé uniquement par les TypedField.
+     *
+     * @param string $condition
+     */
+    public function setCondition(string $condition): void;
+
+    /**
+     * Retourne la condition à appliquer au parent.
+     *
+     * @return string
+     */
+    public function getCondition(): string;
 }
