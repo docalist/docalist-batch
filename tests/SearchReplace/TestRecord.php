@@ -13,6 +13,7 @@ use Docalist\Data\Record;
 use Docalist\Type\Text;
 use Docalist\Type\Composite;
 use Docalist\Type\ListEntry;
+use Docalist\Type\TypedText;
 
 /**
  * Record de test pour la classe FieldTest.
@@ -76,6 +77,41 @@ class TestRecord extends Record
                             'type' => ListEntry::class,
                             'repeatable' => true,
                         ],
+                    ],
+                ],
+
+                'typedText' => [
+                    'type' => TypedText::class,
+                    'repeatable' => true,
+                    'fields' => [
+                        'type'  => ['type' => ListEntry::class],
+                        'value' => ['type' => Text::class],
+                    ],
+                ],
+
+                'typedTexts' => [
+                    'type' => TypedText::class,
+                    'repeatable' => true,
+                    'fields' => [
+                        'type'  => ['type' => ListEntry::class],
+                        'value' => ['type' => Text::class, 'repeatable' => true],
+                    ],
+                ],
+                'typedValue' => [
+                    'type' => TypedText::class,
+                    'repeatable' => true,
+                    'fields' => [
+                        'type'  => ['type' => ListEntry::class],
+                        'value' => ['type' => ListEntry::class],
+                    ],
+                ],
+
+                'typedValues' => [
+                    'type' => TypedText::class,
+                    'repeatable' => true,
+                    'fields' => [
+                        'type'  => ['type' => ListEntry::class],
+                        'value' => ['type' => ListEntry::class, 'repeatable' => true],
                     ],
                 ],
             ],
