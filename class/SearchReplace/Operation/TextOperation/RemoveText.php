@@ -33,7 +33,7 @@ class RemoveText extends ReplaceText
     /**
      * {@inheritDoc}
      */
-    public function getExplanation(): string
+    public function getDefaultExplanation(): string
     {
         return sprintf(
             __('Supprimer <del>%s</del> dans le champ <var>%s</var>.', 'docalist-batch'),
