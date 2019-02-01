@@ -34,7 +34,7 @@ class ClearText extends BaseOperation
     /**
      * {@inheritDoc}
      */
-    public function getExplanation(): string
+    public function getDefaultExplanation(): string
     {
         return sprintf(
             __('Vider le champ <var>%s</var>.', 'docalist-batch'),
@@ -71,7 +71,7 @@ class ClearText extends BaseOperation
         }
 
         // Si le parent est répétable, on va itèrer sur tous les éléments de la collection parent
-        $parent->isRepeatable() && $process = $this->collection($process);
+        $parent->isRepeatable() && $process = $this->parentCollection($process);
 
         // Applique le process au champ parent
         $name = $parent->getName();
