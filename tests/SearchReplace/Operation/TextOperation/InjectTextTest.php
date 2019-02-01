@@ -71,6 +71,22 @@ class InjectTextTest extends OperationTestCase
                 ['text' => 'ES'],
                 false
             ],
+
+            // Le champ contient plusieurs fois le texte à injecter
+            [
+                ['text' => 'ES ES'],
+                $operation,
+                ['text' => 'ES'],
+                true
+            ],
+
+            // Le champ contient déjà le texte à injecter, mais avec ue casse différente
+            [
+                ['text' => 'es'],
+                $operation,
+                ['text' => 'ES'],
+                true
+            ],
         ];
     }
 
