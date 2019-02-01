@@ -35,7 +35,7 @@ class InjectText extends BaseOperation
     /**
      * {@inheritDoc}
      */
-    public function getExplanation(): string
+    public function getDefaultExplanation(): string
     {
         return sprintf(
             __('Injecter <ins>%s</ins> dans le champ <var>%s</var>.', 'docalist-batch'),
