@@ -18,6 +18,7 @@ use Docalist\Type\Composite;
 use Docalist\Type\ListEntry;
 use Docalist\Type\DateTime;
 use Docalist\Type\Text;
+use InvalidArgumentException;
 
 /**
  * Permet de générer la liste des champs sur lesquels on peut lancer un chercher / remplacer à partir
@@ -115,88 +116,42 @@ final class FieldsBuilder extends Fields
         return Field::TYPE_VALUE;
     }
 
+    /**
+     * Crée des sous champ-typés pour le champ passé en paramètre.
+     *
+     * @param string    $field Nom du champ de base (par exemple "topic").
+     * @param array     $types Liste des sous-champs à créer (par exemple ["prisme", "geo", "free"]).
+     *
+     * @throws InvalidArgumentException Si le champ indiqué n'exixte pas ou ne peut pas être un TypedField.
+     */
     public function addTypedFields(string $field, array $types): void
     {
-        $parent = $this->getField($field);
-        $value = $parent->getField('value');
-        $fieldType = $value->getType();
-        $repeat = $value->isRepeatable();
+        // Récupère le champ parent (par exemple "topic") et vérifie qu'il peut être utilisé comme TypedField
+        $base = $this->getField($field);        // champ parent
+        if (! $base->isRepeatable()) {
+            throw new InvalidArgumentException('Le champ parent doit être répétable');
+        }
+        if (! $base->isObject()) {
+            throw new InvalidArgumentException('Le champ parent doit être de type objet');
+        }
+        if (!$base->hasField('type')) {
+            throw new InvalidArgumentException('Le champ parent doit avoir un sous-champ "type"');
+        }
+
+        // Récupère le sous-champ "value" sur lequel portera réellement l'opération
+        $valueField = $base->getField('value'); // le sous-champ "value" doit exister, exception sinon
+
+        // Crée le nouveau champ parent "topic/type" s'il n'existe pas encore
+        $name = $base->getName() . '/type';
+        if (! $this->hasField($name)) {
+            $this->addField(new Field($name, Field::TYPE_OBJECT, true));
+        }
+        $parent = $this->getField($name);
+
+        // Crée un sous champ pour chacun des types fournis en paramètre
         foreach ($types as $type) {
-            $field = new TypedField($type, $fieldType, $repeat);
+            $field = new TypedField($type, $valueField);
             $parent->addField($field);
         }
     }
-
-    /**
-     * Initialise la liste des champs à partir de l'agrégation passée en paramètre.
-     *
-     * @param TermsAggregation $types
-     */
-//     private function initFields(TermsAggregation $types): void
-//     {
-//         $this->fields = new Fields();
-//         foreach ($types->getBuckets() as $bucket) {
-//             $type = $bucket->key;
-//             $class = Database::getClassForType($type);
-//             $record = new $class(); /** @var Record $record */
-//             $this->addFields($this->fields, $record->getSchema());
-//         }
-//     }
-
-    /**
-     *
-     *
-     * @param Database[] $databases Liste des bases Docalist sur lesquelles on peut lancer le traitement par lot,
-     *                              sous la forme d'un tableau de la forme "post-type" => Database.
-     */
-//     private function addTopics(array $databases, TermsAggregation $types): void
-//     {
-//         echo "recherche des champs topics<br />";
-//         //$fields = [];
-//         foreach ($types->getBuckets() as $bucket) {
-//             $type = $bucket->key;
-//             echo "type=$type<br />";
-//             foreach ($bucket->collections->buckets as $bucket) {
-//                 $collection = $bucket->key;
-//                 echo "collection=$collection<br />";
-//                 $postType = $this->collectionToPostType($collection);
-//                 echo "postType=$postType<br />";
-//                 if (! isset($databases[$postType])) {
-//                     echo "base non trouvée<br />";
-//                     continue;
-//                 }
-//                 $database = $databases[$postType];
-//                 echo "Crée une réf de type $type dans la base $postType<br />";
-//                 $record = $database->createReference($type);
-//                 $schema = $record->getSchema();
-//                 if (!$schema->hasField('topic')) {
-//                     echo "pas de champ topic<br />";
-//                     continue;
-//                 }
-//                 $table = $schema->getField('topic')->getField('type')->table();
-//                 list(, $table) = explode(':', $table);
-
-//                 echo "table=$table<br />";
-//                 $table = docalist('table-manager')->get($table); /** @var TableInterface $table */
-//                 foreach ($table->search('code') as $code) {
-//                     echo "Ajouter le champ topic.$code<br />";
-//                 }
-//             }
-//         }
-
-//         //return $fields;
-
-//     }
-
-//     private function collectionToPostType(string $collection): string
-//     {
-//         $indexManager = docalist('docalist-search-index-manager'); /** @var IndexManager $indexManager */
-//         $collections = $indexManager->getCollections();
-//         if (! isset($collections[$collection])) {
-//             return '';
-//         }
-
-//         $indexer = $collections[$collection]; /** @var Indexer $indexer */
-//         return $indexer->getType();
-//     }
 }
