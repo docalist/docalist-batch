@@ -14,6 +14,7 @@ use Docalist\Batch\SearchReplace\Field;
 use Docalist\Data\Record;
 use Docalist\Type\Collection;
 use InvalidArgumentException;
+use Docalist\Type\TypedText;
 
 /**
  * Classe de base pour les opérations de chercher/remplacer.
@@ -49,6 +50,20 @@ abstract class BaseOperation implements Operation
     private $replace;
 
     /**
+     * Pour un champ Typed, condition à appliquer sur le type du parent.
+     *
+     * @var string
+     */
+    private $condition = '';
+
+    /**
+     * Explication de ce que fait l'opération, telle que définie via setExplanation().
+     *
+     * @var string
+     */
+    private $explanation;
+
+    /**
      * Le process qui traite les enregistrements (composition de fonctions anonymes).
      *
      * @var callable
@@ -73,7 +88,6 @@ abstract class BaseOperation implements Operation
         $this->field = $field;
         $this->search = $search;
         $this->replace = $replace;
-        $this->process = $this->createProcess();
     }
 
     /**
@@ -105,13 +119,33 @@ abstract class BaseOperation implements Operation
      */
     final public function process(Record $record): bool
     {
+        empty($this->process) && $this->process = $this->createProcess();
+
         return ($this->process)($record);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getExplanation(): string
+    public function setExplanation(string $explanation):void
+    {
+        $this->explanation = $explanation;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    final public function getExplanation(): string
+    {
+        return $this->explanation ?: $this->getDefaultExplanation();
+    }
+
+    /**
+     * Retourne l'explication par défaut de ce que fait l'opération.
+     *
+     * @return string
+     */
+    protected function getDefaultExplanation(): string
     {
         return sprintf(
             __('Remplacer <del>%s</del> par <ins>%s</ins> dans le champ <var>%s</var>.', 'docalist-batch'),
@@ -138,6 +172,22 @@ abstract class BaseOperation implements Operation
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function setCondition(string $condition): void
+    {
+        $this->condition = $condition;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCondition(): string
+    {
+        return $this->condition;
+    }
+
+    /**
      * Modifie le callable passé en paramètre pour qu'il s'applique à tous les éléments d'une collection.
      *
      * Le callable généré retourne true si l'opération a retourné true pour l'un des éléments.
@@ -153,6 +203,37 @@ abstract class BaseOperation implements Operation
             foreach ($collection as $occurence) {
                 $changed = $process($occurence);
                 $result = $result || $changed;
+            }
+
+            return $result;
+        };
+    }
+
+    /**
+     * Modifie le callable passé en paramètre pour qu'il s'applique à tous les éléments du champ parent.
+     *
+     * Le callable généré retourne true si l'opération a retourné true pour l'un des éléments.
+     *
+     * Cette méthode tient compte de la condition éventuelle du parent (cf. getCondition).
+     *
+     * @param callable $process Un callable de la forme "function (Any): bool".
+     *
+     * @return callable Un callable de la forme "function (Collection): bool".
+     */
+    protected function parentCollection(callable $process): callable
+    {
+        $condition = $this->getCondition();
+        if (empty($condition)) {
+            return $this->collection($process);
+        }
+
+        return function (Collection $collection) use ($process, $condition): bool {
+            $result = false;
+            foreach ($collection as $occurence) { /** @var TypedText $occurence */
+                if ($occurence->type->getPhpValue() === $condition) {
+                    $changed = $process($occurence);
+                    $result = $result || $changed;
+                }
             }
 
             return $result;
