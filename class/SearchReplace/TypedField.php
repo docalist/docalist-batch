@@ -20,38 +20,41 @@ use Docalist\Type\Collection;
  */
 final class TypedField extends Field
 {
-    public function getLabel(): string
+    /**
+     *
+     * @var string
+     */
+    private $condition;
+
+    /**
+     * @var Field
+     */
+    private $realField;
+
+    /**
+     * Initialise le champ Typed.
+     *
+     * @param string    $condition  Condition à appliquer sur le type du champ parent.
+     * @param Field     $type       Champ value réel sur lequel porte l'opération.
+     */
+    public function __construct(string $condition, Field $realField)
     {
-        $label = $this->getName();
-
-        $type = $this->getParent()->getName();
-        $this->isRepeatable() && $type .= ', répétable';
-
-        return $label . ' (' . $type . ')';
+        $this->condition = $condition;
+        $this->realField = $realField;
+        parent::__construct($condition, $realField->getType(), $realField->isRepeatable());
     }
 
-    protected function parent(callable $operation): callable
+    /**
+     * {@inheritDoc}
+     */
+    public function getOperation(string $search, string $replace): Operation
     {
-        // Le nom (court) du champ correspond au type d'entrée à modifier (par exemple "free" pour les topics)
-        $type = $this->getName();
+        $operation = $this->realField->getOperation($search, $replace);
+        $operation->setCondition($this->condition);
 
-        // Le champ parent (TypedText) est répétable
-        return function (Collection $collection) use ($type, $operation): bool {
-            // Crée un nouvel élément du type indiqué. C'est nécessaire pour injecter une valeur (par exemple
-            // un nouvel isbn). Pour les autres opérations, sera supprimé lors du save (appel de filterEmpty).
-            $collection[] = ['type' => $type];
+        $explanation = parent::getOperation($search, $replace)->getExplanation();
+        $operation->setExplanation($explanation);
 
-            // Applique l'opération à tous les éléments qui ont le type demandé
-            $result = false;
-            foreach ($collection as $typedText) { /** @var TypedText $typedText */
-                if ($typedText->type->getPhpValue() === $type) {
-                    $changed = $operation($typedText->value);
-                    $result = $result || $changed;
-                }
-            }
-
-            // Ok
-            return $result;
-        };
+        return $operation;
     }
 }
