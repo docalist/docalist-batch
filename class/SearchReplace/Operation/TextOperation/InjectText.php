@@ -68,17 +68,52 @@ class InjectText extends BaseOperation
             };
         }
 
-        // Champ parent répétable
-        $test = $field->isRepeatable() ? $this->existsRepeatable() : $this->existsNotRepeatable();
-        return function (Record $record) use ($name, $test, $process): bool {
-            foreach ($record->$name as $occurence) {
-                if ($test($occurence)) {
-                    return false; // L'item à injecter existe déjà, retourne false (non modifié)
+        // Teste s'il s'agit d'une opération sur un champ Typed
+        $condition = $this->getCondition();
+
+        // Crée un prédicat qui teste si le texte à injecter existe déjà
+        $repeatable = $field->isRepeatable();
+        $exists = $repeatable ? $this->existsRepeatable() : $this->existsNotRepeatable();
+
+        // Champ parent répétable standard
+        if (empty($condition)) {
+            return function (Record $record) use ($name, $exists, $process): bool {
+                foreach ($record->$name as $occurence) {
+                    if ($exists($occurence)) {
+                        return false; // L'item à injecter existe déjà, retourne false (non modifié)
+                    }
+                }
+
+                // Crée un nouvel item dans la collection et exécute le process dessus
+                $record->$name[] = [];
+                return $process($record->$name->last());
+            };
+        }
+
+        // Opération sur un champ Typed
+        return function (Record $record) use ($name, $exists, $process, $condition, $repeatable): bool {
+            $indexOfType = null;
+
+            // Teste si le champ parent a un item du bon type qui contient déjà la valeur à injecter
+            foreach ($record->$name as $index => $occurence) { /** @var TypedText $occurence */
+                if ($occurence->type->getPhpValue() === $condition) {
+                    if ($exists($occurence)) {
+                        return false; // L'item à injecter existe déjà, retourne false (non modifié)
+                    }
+                    is_null($indexOfType) && $indexOfType = $index;
                 }
             }
 
-            // Crée un nouvel item dans la collection et exécute le process dessus
-            $record->$name[] = [];
+            // La valeur à injecter n'existe pas déjà
+            if ($repeatable) {
+                if (is_null($indexOfType)) {
+                    $record->$name[] = ['type' => $condition];
+                    return $process($record->$name->last());
+                }
+                return $process($record->$name[$indexOfType]);
+            }
+
+            $record->$name[] = ['type' => $condition];
             return $process($record->$name->last());
         };
     }
