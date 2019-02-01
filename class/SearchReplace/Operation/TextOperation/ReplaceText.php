@@ -81,7 +81,7 @@ class ReplaceText extends BaseOperation
         }
 
         // Si le parent est répétable, on itère sur tous les éléments du parent
-        $parent->isRepeatable() && $process = $this->collection($process);
+        $parent->isRepeatable() && $process = $this->parentCollection($process);
 
         // Applique le process au champ parent
         $name = $parent->getName();
