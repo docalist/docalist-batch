@@ -256,7 +256,7 @@ final class BatchWidget extends WP_Widget
      *
      * @return Container
      */
-    protected function getSettingsForm()
+    protected function getSettingsForm(): Container
     {
         $form = new Container();
 
