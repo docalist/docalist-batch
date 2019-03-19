@@ -22,7 +22,7 @@ use Docalist\Type\TypedText;
  */
 class TestRecord extends Record
 {
-    public static function loadSchema()
+    public static function loadSchema(): array
     {
         return [
             'name' => 'testrecord',
