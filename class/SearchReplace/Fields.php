@@ -110,8 +110,35 @@ class Fields
 
         $options = [];
         foreach ($fields as $field) {
+            /*
+             * Pour le moment, le chercher/remplacer ne peut pas gérer plus de deux niveaux de hiérarchies (champ
+             * et sous-champ) car on génère les process avec un callable pour le sous-champ qu'on applique ensuite
+             * au champ parent (il n'y a pas de boucle "while has parent").
+             * Ca pose plusieurs problèmes pour le champ address qui a trois niveaux de hiérarchie
+             * (address->value->country) :
+             * - on se retrouve avec un select qui a des groupes d'options imbriqués et ça génère une exception
+             * - de toute façon le chercher/remplacer ne peut pas fonctionner
+             * Modifier docalist-batch pour que ça gère plus de deux niveaux sera compliqué : il faut revoir
+             * complètement le code et gérer tous els cas (injection, suppression, etc.)
+             * Une autre solution serait de ne pas avoir plus de deux niveaux (ça pose aussi problème dans les
+             * formulaires, etc.) et de transformer le champ address pour enlever le niveau "value".
+             * Mais ça aussi c'est compliqué car il faut ré-écrire le widget "saisie d'adresse", gérer la
+             * compatibilité ascendantes, mouliner les données, etc.
+             * Donc pour le moment :
+             * - le chercher/remplacer sur le champ address ne fonctionne pas (àa dit systématiquement "zéro notices
+             *   modifiées)
+             * - on modifie le select pour n'afficher que les sous-champs (plus de <optgroup>) pour éviter que ça
+             *   bloque tout.
+             */
+            // version du code qui génère des optgroups
+            // if ($field->hasFields()) {
+            //     $options[$field->getLabel()] = $field->getFieldsAsSelectOptions();
+            //     continue;
+            // }
+
+            // Génère uniquement une liste à plat avec les sous-champs
             if ($field->hasFields()) {
-                $options[$field->getLabel()] = $field->getFieldsAsSelectOptions();
+                $options += $field->getFieldsAsSelectOptions();
                 continue;
             }
 
