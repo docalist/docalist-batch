@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /**
  * This file is part of Docalist Batch.
  *
@@ -7,6 +7,8 @@
  * For copyright and license information, please view the
  * LICENSE file that was distributed with this source code.
  */
+declare(strict_types=1);
+
 namespace Docalist\Batch\SearchReplace\Operation\ValueOperation;
 
 use Docalist\Batch\SearchReplace\Operation\TextOperation\InjectText;
