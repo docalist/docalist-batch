@@ -272,7 +272,7 @@ abstract class BaseBatch implements Batch
                 );
                 continue;
             }
-            $types[] = $postType;
+            $types[] = $collection;
         }
 
         if ($messages && !$this->hasParameter('silent')) {
@@ -293,9 +293,7 @@ abstract class BaseBatch implements Batch
             return false;
         }
 
-        //printf('<p>La requête modifiée portera sur les bases docalist suivantes : %s</p>', implode(', ', $databases));
-
-        $searchRequest->setTypes($types);
+        $searchRequest->addFilter($this->getQueryDsl()->terms('in', $types), 'hidden-filter');
 
         return true;
     }
