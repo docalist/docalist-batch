@@ -25,7 +25,7 @@ use Docalist\Batch\Batch;
     <p>
         <b><?php
             printf(
-                __('Vous allez changer transférer %d notice(s).', 'docalist-batch'),
+                __('Vous allez transférer %d notice(s).', 'docalist-batch'),
                 $count
             ) ?>
         </b>
