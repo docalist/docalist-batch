@@ -19,7 +19,6 @@ use Docalist\Search\Aggregation\Bucket\FilterAggregation;
 use Docalist\Data\Database;
 use Docalist\Data\Field\PostTypeField;
 use Docalist\Forms\Container;
-use Docalist\Search\IndexManager;
 use Docalist\Search\Aggregation\Bucket\TermsAggregation;
 
 /**
