@@ -294,7 +294,9 @@ final class BatchWidget extends WP_Widget
      */
     public function update($new, $old)
     {
-        $settings = $this->getSettingsForm()->bind($new)->getData();
+        $form = $this->getSettingsForm();
+        $form->bind($new);
+        $settings = $form->getData();
 
         //         echo '<pre>$new=', htmlspecialchars(var_export($new,true)), '</pre>';
         //         echo '<pre>form data=', htmlspecialchars(var_export($settings,true)), '</pre>';
