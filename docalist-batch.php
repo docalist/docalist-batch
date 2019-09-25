@@ -10,7 +10,7 @@
  * Plugin Name: Docalist Batch
  * Plugin URI:  https://docalist.org/
  * Description: Traitements par lot sur des notices Docalist.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Daniel Ménard
  * Author URI:  http://docalist.org/
  * Text Domain: docalist-batch
@@ -28,7 +28,7 @@ use Docalist\Search\QueryDSL;
 /**
  * Version du plugin.
  */
-define('DOCALIST_BATCH_VERSION', '1.1.0'); // Garder synchro avec la version indiquée dans l'entête
+define('DOCALIST_BATCH_VERSION', '1.2.0'); // Garder synchro avec la version indiquée dans l'entête
 
 /**
  * Path absolu du répertoire dans lequel le plugin est installé.
