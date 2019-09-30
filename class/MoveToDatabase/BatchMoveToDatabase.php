@@ -20,6 +20,8 @@ use Docalist\Data\Database;
 use Docalist\Data\Field\PostTypeField;
 use Docalist\Forms\Container;
 use Docalist\Search\Aggregation\Bucket\TermsAggregation;
+use Docalist\Search\Indexer\Field\CollectionIndexer;
+use Docalist\Search\Indexer\Field\PostTypeIndexer;
 
 /**
  * Transfère les notices vers une autre base Docalist.
@@ -89,7 +91,7 @@ final class BatchMoveToDatabase extends BaseBatch
                 $searchRequest->addAggregation($dbCount);
             }
 
-            $types = new TermsAggregation('type', ['size' => 1000]);
+            $types = new TermsAggregation(PostTypeIndexer::CODE_FILTER, ['size' => 1000]);
             $types->setName('types');
             $searchRequest->addAggregation($types);
         }
@@ -102,7 +104,7 @@ final class BatchMoveToDatabase extends BaseBatch
     {
         $database = $this->getDatabase($postType);
 
-        return is_null($database) ? '' : $database->settings()->name->getPhpValue();
+        return is_null($database) ? '' : $database->getSettings()->name->getPhpValue();
 
         /*
          * La ligne ci-desssus doit rester synchro avec  DatabaseIndexer (nom de la collection = nom de la base)
@@ -119,7 +121,7 @@ final class BatchMoveToDatabase extends BaseBatch
      */
     private function getFilter(string $collection): array
     {
-        return $this->getQueryDsl()->term('in', $collection);
+        return $this->getQueryDsl()->term(CollectionIndexer::FILTER, $collection);
     }
 
     /**
@@ -132,7 +134,7 @@ final class BatchMoveToDatabase extends BaseBatch
     private function getExcludeFilter(string $collection): array
     {
         $dsl = $this->getQueryDsl();
-        return $dsl->bool([$dsl->mustNot($dsl->term('in', $collection))]);
+        return $dsl->bool([$dsl->mustNot($this->getFilter($collection))]);
     }
 
     /**
@@ -155,14 +157,14 @@ final class BatchMoveToDatabase extends BaseBatch
 
         // Ajoute des filtres pour exclure les notices qui ont un type qui n'existe pas dans la base de destination
         $types = $searchResponse->getAggregation('types'); /** @var TermsAggregation $types */
-        $databaseTypes = $database->settings()->types;
+        $databaseTypes = $database->getSettings()->types;
         $messages = [];
         foreach ($types->getBuckets() as $bucket) {
             $type = $bucket->key;
             $count = $bucket->doc_count;
             if (! isset($databaseTypes[$type])) {
                 $dsl = $this->getQueryDsl();
-                $excludeFilter = $dsl->bool([$dsl->mustNot($dsl->term('type', $type))]);
+                $excludeFilter = $dsl->bool([$dsl->mustNot($dsl->term(PostTypeIndexer::CODE_FILTER, $type))]);
                 $searchRequest->addFilter($excludeFilter);
                 $messages[] = sprintf(__('<b>%d notices</b> de type <b>« %s »</b>', 'docalist-batch'), $count, $type);
             }
@@ -175,7 +177,7 @@ final class BatchMoveToDatabase extends BaseBatch
                     qui n\'existent pas dans la base "%s" :</p>',
                     'docalist-batch'
                 ),
-                $database->label()
+                $database->getLabel()
             );
             echo '<ul class="ul-square"><li>', implode(',</li><li>', $messages), '.</li></ul>';
         }
@@ -195,7 +197,7 @@ final class BatchMoveToDatabase extends BaseBatch
                             'docalist-batch'
                         ),
                         $count,
-                        $database->label()
+                        $database->getLabel()
                     );
                 }
             }
