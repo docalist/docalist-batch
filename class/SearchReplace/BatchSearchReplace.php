@@ -20,6 +20,7 @@ use Docalist\Search\SearchRequest;
 use Docalist\Search\SearchResponse;
 use Docalist\Search\Aggregation\Bucket\TermsAggregation;
 use Docalist\Search\Aggregation\Standard\TermsIn;
+use Docalist\Search\Indexer\Field\PostTypeIndexer;
 
 /**
  * Chercher / remplacer.
@@ -81,7 +82,7 @@ final class BatchSearchReplace extends BaseBatch
         }
 
         // Ajoute une agrégation imbriquée type de notice » collection
-        $types = new TermsAggregation('type', ['size' => 1000]);
+        $types = new TermsAggregation(PostTypeIndexer::CODE_FILTER, ['size' => 1000]);
         $types->setName('types');
         $collections = new TermsIn(['size' => 1000]);
         $collections->setName('collections');
