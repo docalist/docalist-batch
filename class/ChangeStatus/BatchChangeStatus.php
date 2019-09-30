@@ -19,6 +19,7 @@ use Docalist\Forms\Container;
 use Docalist\Search\SearchRequest;
 use Docalist\Search\SearchResponse;
 use Docalist\Search\Aggregation\Bucket\FilterAggregation;
+use Docalist\Search\Indexer\Field\PostStatusIndexer;
 
 /**
  * Change le statut des notices.
@@ -98,7 +99,7 @@ final class BatchChangeStatus extends BaseBatch
      */
     private function getFilter(string $status): array
     {
-        return $this->getQueryDsl()->term('status', $status);
+        return $this->getQueryDsl()->term(PostStatusIndexer::CODE_FILTER, $status);
     }
 
     /**
@@ -111,7 +112,7 @@ final class BatchChangeStatus extends BaseBatch
     private function getExcludeFilter(string $status): array
     {
         $dsl = $this->getQueryDsl();
-        return $dsl->bool([$dsl->mustNot($dsl->term('status', $status))]);
+        return $dsl->bool([$dsl->mustNot($this->getFilter($status))]);
     }
 
     /**
