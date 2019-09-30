@@ -19,6 +19,7 @@ use Docalist\Data\Database;
 use Docalist\Data\Field\PostAuthorField;
 use Docalist\Forms\Container;
 use Docalist\Search\Aggregation\Bucket\FilterAggregation;
+use Docalist\Search\Indexer\Field\PostAuthorIndexer;
 
 /**
  * Change l'auteur WordPress des notices.
@@ -101,7 +102,7 @@ final class BatchChangeAuthor extends BaseBatch
      */
     private function getFilter(string $createdBy): array
     {
-        return $this->getQueryDsl()->term('createdby', $createdBy);
+        return $this->getQueryDsl()->term(PostAuthorIndexer::LOGIN_FILTER, $createdBy);
     }
 
     /**
@@ -114,7 +115,7 @@ final class BatchChangeAuthor extends BaseBatch
     private function getExcludeFilter(string $createdBy): array
     {
         $dsl = $this->getQueryDsl();
-        return $dsl->bool([$dsl->mustNot($dsl->term('createdby', $createdBy))]);
+        return $dsl->bool([$dsl->mustNot($this->getFilter($createdBy))]);
     }
 
     /**
