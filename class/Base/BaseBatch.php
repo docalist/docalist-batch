@@ -337,31 +337,9 @@ abstract class BaseBatch implements Batch
 
     public function processRecords(SearchRequest $searchRequest): void
     {
-        $iterator = new RecordIterator($searchRequest);
-
-        $iterator->rewind();
         $count = 0;
-        while ($iterator->valid()) {
-            $id = $iterator->key();
-            try {
-                $record = $iterator->current();
-            } catch (InvalidArgumentException $e) {
-                printf(
-                    '<p>Warning : erreur lors du chargement de la notice %s ("%s").
-                    l\'index docalist-search est peut-être désynchronisé.
-                    Post ignoré</p>',
-                    $id,
-                    $e->getMessage()
-                );
-                $iterator->next();
-                continue;
-            }
-
-            ++$count;
-            if (0 === $count % 100) {
-                printf('%d notices traitées...<br />', $count);
-            }
-
+        $records = new RecordIterator($searchRequest);
+        foreach ($records as $record) {
             $database = $this->getDatabase($record->posttype->getPhpValue());
             if (is_null($database)) {
                 printf('Warning : Post %s is not a docalist record, ignore<br />', $record->getID());
@@ -373,7 +351,10 @@ abstract class BaseBatch implements Batch
                 return;
             }
 
-            $iterator->next();
+            ++$count;
+            if (0 === $count % 100) {
+                printf('%d notices traitées...<br />', $count);
+            }
         }
     }
 
