@@ -12,7 +12,7 @@
  * Description: Traitements par lot sur des notices Docalist.
  * Version:     1.2.0
  * Author:      Daniel Ménard
- * Author URI:  http://docalist.org/
+ * Author URI:  https://docalist.org/
  * Text Domain: docalist-batch
  * Domain Path: /languages
  *
