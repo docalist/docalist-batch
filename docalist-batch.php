@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace Docalist\Batch;
 
+use Docalist\Batch\Installer;
 use Docalist\Data\Plugin as DocalistData;
 use Docalist\Search\QueryDSL;
 
@@ -84,3 +85,26 @@ add_action('plugins_loaded', function () {
     $plugin = new DocalistBatch();
     $plugin->initialize($docalistData, $searchEngine, $queryDsl);
 }, 11); // Priorité 11 : on attend que docalist-data soit chargé car on en a besoin
+
+/*
+ * Activation du plugin.
+ */
+register_activation_hook(DOCALIST_BATCH, function () {
+    // Si docalist-core n'est pas dispo, on ne peut rien faire
+    if (defined('DOCALIST_CORE')) {
+        // plugins_loaded n'a pas encore été lancé, donc il faut initialiser notre autoloader
+        docalist('autoloader')->add(__NAMESPACE__, __DIR__ . '/class');
+        (new Installer())->activate();
+    }
+});
+
+/*
+ * Désactivation du plugin.
+ */
+register_deactivation_hook(DOCALIST_BATCH, function () {
+    // Si docalist-core n'est pas dispo, on ne peut rien faire
+    if (defined('DOCALIST_CORE')) {
+        docalist('autoloader')->add(__NAMESPACE__, __DIR__ . '/class');
+        (new Installer())->deactivate();
+    }
+});
