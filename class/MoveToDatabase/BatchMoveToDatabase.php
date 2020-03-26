@@ -247,12 +247,6 @@ final class BatchMoveToDatabase extends BaseBatch
      */
     public function process(Record $record, Database $database): bool
     {
-        // Mémorise l'ID de la notice existante
-        $id = $record->getID();
-
-        // Reset l'ID de façon à créer un nouveau post
-        $record->setID(null);
-
         // Change la base de destination
         $record->posttype->assign($this->postType);
 
@@ -265,14 +259,11 @@ final class BatchMoveToDatabase extends BaseBatch
         // Modifie la date de dernière modification
         $record->lastupdate->assign(current_time('mysql'));
 
-        // Crée la nouvelle notice
-        $this->getDatabase($this->postType)->save($record);
-
         // Indique l'utilisateur qui a fait la modif
         update_post_meta($record->getID(), '_edit_last', get_current_user_id());
 
-        // Supprime l'ancien post
-        $database->delete($id);
+        // Sauvegarde la notice dans la base des destination
+        $this->getDatabase($this->postType)->save($record);
 
         // Met à jour nos compteurs
         ++$this->modified;
