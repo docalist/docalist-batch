@@ -82,8 +82,6 @@ interface Batch extends Tool, BatchParameters, BatchUtil
      *
      * Cette méthode est appellée une fois que le traitement par lot est terminé. Elle peut afficher
      * un message de synthèse, fermer les ressources utilisées, etc.
-     *
-     * @return bool
      */
     public function afterProcess(): void;
 }
