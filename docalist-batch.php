@@ -60,7 +60,7 @@ add_action('plugins_loaded', function () {
     $dependencies = ['DOCALIST_CORE', 'DOCALIST_DATA', 'DOCALIST_SEARCH'];
     foreach ($dependencies as $dependency) {
         if (! defined($dependency)) {
-            return add_action('admin_notices', function () use ($dependency) {
+            add_action('admin_notices', function () use ($dependency) {
                 deactivate_plugins(DOCALIST_BATCH);
                 unset($_GET['activate']); // empêche wp d'afficher "extension activée"
                 printf(
@@ -70,6 +70,7 @@ add_action('plugins_loaded', function () {
                     ucwords(strtolower(strtr($dependency, '_', ' ')))
                 );
             });
+            return;
         }
     }
 
