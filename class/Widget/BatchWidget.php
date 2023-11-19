@@ -237,6 +237,8 @@ final class BatchWidget extends WP_Widget
 
         // Affiche le formulaire
         $form->display('wordpress');
+
+        return ''; // cf. https://developer.wordpress.org/reference/classes/wp_widget/form/#comment-2157
     }
 
     /**
