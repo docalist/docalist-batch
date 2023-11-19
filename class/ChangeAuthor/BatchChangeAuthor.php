@@ -130,7 +130,8 @@ final class BatchChangeAuthor extends BaseBatch
 
         // Si l'utilisateur a déjà choisi le nouveau compte, ajoute un filtre sur createdBy
         if ($this->hasParameter('createdBy')) {
-            $userCount = $searchResponse->getAggregation('user-count'); /** @var FilterAggregation $statusCount */
+            /** @var FilterAggregation $userCount */
+            $userCount = $searchResponse->getAggregation('user-count');
             $count = $userCount->getResult('doc_count');
             if ($count) {
                 $createdBy = $this->getParameter('createdBy');

@@ -21,6 +21,7 @@ use Docalist\Search\SearchResponse;
 use Docalist\Search\Aggregation\Bucket\TermsAggregation;
 use Docalist\Search\Aggregation\Standard\TermsIn;
 use Docalist\Search\Indexer\Field\PostTypeIndexer;
+use Docalist\Table\TableInterface;
 
 /**
  * Chercher / remplacer.
@@ -253,7 +254,8 @@ final class BatchSearchReplace extends BaseBatch
         foreach ($tables as $field => $fieldTables) {
             $types = [];
             foreach ($fieldTables as $table) {
-                $table = docalist('table-manager')->get($table); /** @var TableInterface $table */
+                /** @var TableInterface $table */
+                $table = docalist('table-manager')->get($table);
                 foreach ($table->search('code') as $code) {
                     $types[$code] = $code;
                 }
