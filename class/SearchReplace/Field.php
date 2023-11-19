@@ -104,7 +104,6 @@ class Field extends Fields
         $this->name = $name;
         $this->type = $type;
         $this->repeatable = $repeatable;
-        $this->fields = [];
     }
 
     /**
