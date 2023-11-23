@@ -19,7 +19,7 @@
     },
     "require" : {
         "php" : ">=7.2",
-        "composer/installers" : "~1.0",
+        "composer/installers": "^1.0 || ^2.0",
         "docalist/docalist-core": "^3.4.0",
         "docalist/docalist-search": "^4.2.0",
         "docalist/docalist-data": "^4.2.0"
